@@ -53,11 +53,12 @@ export function ExplorerTour({
 
   return (
     <section
+      data-explorer-tour
       aria-label="Guided tour of the explorer"
       className={cn(
-        'rounded-xl border border-exec-500/50 bg-ink-900/96 p-4',
+        'rounded-xl border border-exec-500/50 bg-ink-900 p-4',
         placement === 'overlay'
-          ? 'absolute bottom-3 left-3 z-20 max-w-[380px] shadow-2xl backdrop-blur'
+          ? 'absolute bottom-3 left-3 z-20 max-w-[380px] shadow-overlay'
           : 'mx-3 mt-3',
       )}
     >

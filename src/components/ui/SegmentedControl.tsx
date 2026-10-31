@@ -69,9 +69,7 @@ export function SegmentedControl<T extends string>({
             className={cn(
               'group inline-flex items-center gap-1.5 rounded-[5px] font-medium transition-colors',
               size === 'sm' ? 'h-7 px-2.5 text-[12px]' : 'h-8 px-3 text-[13px]',
-              checked
-                ? 'bg-ink-600 text-fg shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]'
-                : 'text-fg-subtle hover:text-fg',
+              checked ? 'bg-raised text-fg shadow-raised' : 'text-fg-subtle hover:text-fg',
             )}
           >
             {segment.label}

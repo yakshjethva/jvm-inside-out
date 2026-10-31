@@ -57,7 +57,7 @@ export function InternalView({
         </AnatomyCanvas>
 
         <div className="pointer-events-none absolute top-3 right-3 w-[min(380px,calc(100%-1.5rem))] space-y-2">
-          <div className="pointer-events-auto rounded-md border border-ink-600 bg-ink-900/90 px-3 py-2 backdrop-blur">
+          <div className="pointer-events-auto rounded-md border border-ink-600 bg-ink-900 px-3 py-2">
             <p className="kicker">{dissection ? 'Dissection' : 'Focus view'}</p>
             <p className="font-serif text-[17px] leading-snug text-fg">
               {dissection?.title ?? doc.name}
@@ -66,7 +66,7 @@ export function InternalView({
           </div>
           {part && (
             <div
-              className="pointer-events-auto rounded-md border border-rt-500/50 bg-ink-900/95 p-3 shadow-xl backdrop-blur"
+              className="pointer-events-auto rounded-md border border-rt-500/50 bg-ink-900 p-3 shadow-overlay"
               role="status"
               aria-live="polite"
             >

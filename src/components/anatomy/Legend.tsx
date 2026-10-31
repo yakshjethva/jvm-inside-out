@@ -26,7 +26,7 @@ export function Legend({ onClose, showStates }: { onClose: () => void; showState
   return (
     <section
       aria-label="Diagram legend"
-      className="w-[min(300px,calc(100vw-2rem))] rounded-lg border border-ink-600 bg-ink-900/95 p-3 text-[12px] shadow-xl backdrop-blur"
+      className="w-[min(300px,calc(100vw-2rem))] rounded-lg border border-ink-600 bg-ink-900 p-3 text-[12px] shadow-overlay"
     >
       <div className="mb-2 flex items-center justify-between">
         <h2 className="kicker">Legend</h2>

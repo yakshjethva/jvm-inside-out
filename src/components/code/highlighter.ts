@@ -3,7 +3,7 @@ import type { CodeLanguage } from '@/types/content';
 
 /** Shiki theme built from the design tokens (see src/styles/index.css). */
 const THEME: ThemeRegistration = {
-  name: 'inside-java',
+  name: 'jvm-atlas',
   type: 'dark',
   colors: { 'editor.background': '#00000000', 'editor.foreground': '#d6deea' },
   tokenColors: [
@@ -94,5 +94,5 @@ export async function highlight(code: string, language: CodeLanguage): Promise<s
   const lang = SHIKI_LANG[language];
   if (!lang) return null;
   const highlighter = await loadHighlighter();
-  return highlighter.codeToHtml(code, { lang, theme: 'inside-java' });
+  return highlighter.codeToHtml(code, { lang, theme: 'jvm-atlas' });
 }

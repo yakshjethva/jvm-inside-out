@@ -18,6 +18,7 @@ import { COMPONENT_LIST } from '@/content/jvm';
 import { FIRST_RUN } from '@/content/lesson/firstRun';
 import { LEARNING_PATHS } from '@/content/paths';
 import { QUESTION_PATHS, type QuestionPath } from '@/content/questions';
+import { TOPICS } from '@/content/topics';
 import { useProgress } from '@/hooks/useLearningState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn } from '@/lib/cn';
@@ -108,6 +109,34 @@ export function LearningPathsPage() {
               </li>
             ))}
           </ol>
+        </section>
+
+        {/* Guides: one page per common question */}
+        <section aria-labelledby="guides" className="mt-16">
+          <h2 id="guides" className="font-serif text-[30px] text-fg">
+            Guides: short answers, then the whole story
+          </h2>
+          <p className="mt-2 max-w-2xl text-[16px] text-fg-muted">
+            Each guide answers one question simply, then in practice, then in depth, and links to
+            the part of the machine that shows it.
+          </p>
+          <ul className="mt-8 grid gap-4 md:grid-cols-2">
+            {TOPICS.map((topic) => (
+              <li key={topic.slug}>
+                <Link
+                  to={`/learn/${topic.slug}`}
+                  className="group block h-full rounded-xl border border-ink-600 bg-raised p-5 shadow-raised transition-colors hover:border-exec-400"
+                >
+                  <span className="block text-[17px] font-semibold text-fg group-hover:text-exec-300">
+                    {topic.title}
+                  </span>
+                  <span className="mt-1 block text-[14.5px] leading-relaxed text-fg-muted">
+                    {topic.description}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Next questions */}

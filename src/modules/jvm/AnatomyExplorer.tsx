@@ -1,7 +1,9 @@
 import {
+  Box,
   Boxes,
   Compass,
   Crosshair,
+  List,
   Map as MapIcon,
   Microscope,
   Minimize2,
@@ -49,12 +51,16 @@ import { InternalView } from './internals/InternalView';
 import { chooseCameraFocus, type CameraFocus } from './camera';
 import { ExplorerTour, TOUR_ID } from './ExplorerTour';
 import { buildScene, PART_NUMBER } from './scene';
-import { useAnatomyState, type ExplorerMode } from './useAnatomyState';
+import { useAnatomyState, type ExplorerMode, type ExplorerViewer } from './useAnatomyState';
+import { Loading3D, Notice3D, Viewer3DBoundary } from '@/modules/anatomy-3d/fallback/Fallback3D';
 
 // The lesson's interactive models load only when a learner opens one in the inspector.
 const Exhibit = lazy(() =>
   import('@/modules/lesson/exhibits').then((m) => ({ default: m.Exhibit })),
 );
+
+// Three.js and the 3D model load only when a learner chooses the 3D viewer.
+const Anatomy3D = lazy(() => import('@/modules/anatomy-3d/viewer/Anatomy3D'));
 
 /** On narrow screens only the selected view shows its name; the others keep theirs for screen readers. */
 const modeLabel = (icon: React.ReactNode, text: string) => (
@@ -89,6 +95,24 @@ const MODE_SEGMENTS: { value: ExplorerMode; label: React.ReactNode; description:
   },
 ];
 
+const VIEWER_SEGMENTS: { value: ExplorerViewer; label: React.ReactNode; description: string }[] = [
+  {
+    value: '2d',
+    label: modeLabel(<MapIcon size={14} aria-hidden />, '2D map'),
+    description: 'The anatomy plate: every part drawn flat, with its connections',
+  },
+  {
+    value: '3d',
+    label: modeLabel(<Box size={14} aria-hidden />, '3D model'),
+    description: 'The same parts as a 3D model you can turn, explode and isolate',
+  },
+  {
+    value: 'list',
+    label: modeLabel(<List size={14} aria-hidden />, 'List'),
+    description: 'Every part as a plain list, for reading or a screen reader',
+  },
+];
+
 /** Plain-language labels for the collapsed regions of the overview map. */
 const OVERVIEW_LABELS: Partial<Record<ComponentId, { title: string; blurb: string }>> = {
   ...Object.fromEntries(JVM_REGIONS.map((r) => [r.id, { title: r.title, blurb: r.blurb }])),
@@ -120,7 +144,7 @@ export function AnatomyExplorer() {
   const progress = useProgress();
   const reducedMotion = useReducedMotion();
   const wide = useMediaQuery('(min-width: 1280px)', true);
-  const wideEnoughForOverlay = useMediaQuery('(min-width: 640px)', true);
+
   const canvasRef = useRef<CanvasHandle>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
@@ -144,16 +168,32 @@ export function AnatomyExplorer() {
   const [focus, setFocus] = useState<CameraFocus | null>(null);
   // First visit without a deep link: offer the guided tour once.
   const [tourStep, setTourStep] = useState<number | null>(() =>
-    !(TOUR_ID in preferences.dismissed) && !selectedId && mode === 'anatomy' ? 0 : null,
+    !(TOUR_ID in preferences.dismissed) &&
+    !selectedId &&
+    mode === 'anatomy' &&
+    state.viewer === '2d'
+      ? 0
+      : null,
   );
+  // After hydration the stored preferences replace the defaults: a learner who
+  // already dismissed the tour must not see it again.
+  const tourDismissed = TOUR_ID in preferences.dismissed;
+  const [seenDismissed, setSeenDismissed] = useState(tourDismissed);
+  if (tourDismissed !== seenDismissed) {
+    setSeenDismissed(tourDismissed);
+    if (tourDismissed) setTourStep(null);
+  }
   const closeTour = () => {
     setTourStep(null);
     preferenceActions.dismiss(TOUR_ID);
   };
-  // The tour points at the map, which "Look inside" replaces, so it opens on the map.
+  // The tour points at the 2D map, which "Look inside", the 3D model and the
+  // list replace, so it opens on the map.
   const openTour = () => {
-    if (mode === 'internal') state.setMode('anatomy');
+    if (mode === 'internal' || state.viewer !== '2d') state.showMap();
     setTourStep(0);
+    // Set before the first paint for learners who had dismissed the tour (scripts/prerender.mjs).
+    document.documentElement.removeAttribute('data-tour-dismissed');
   };
 
   // The overview shows the six main parts; the region holding the selection is opened.
@@ -292,6 +332,21 @@ export function AnatomyExplorer() {
     }
   };
 
+  /** Selection from the 3D model or the list: the same URL state, without the 2D camera. */
+  const on3DSelect = (id: ComponentId | null) => {
+    select(id);
+    if (id && !wide) {
+      window.setTimeout(
+        () =>
+          inspectorRef.current?.scrollIntoView({
+            behavior: reducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+          }),
+        50,
+      );
+    }
+  };
+
   const onHover = (id: ComponentId | null) => {
     setHoveredId(id);
     if (id && canvasRef.current) {
@@ -418,6 +473,15 @@ export function AnatomyExplorer() {
           onChange={state.setMode}
           segments={MODE_SEGMENTS}
         />
+        {/* "Look inside" is a 2D dissection whatever the viewer, so the choice is hidden there. */}
+        {mode !== 'internal' && (
+          <SegmentedControl
+            label="Viewer"
+            value={state.viewer}
+            onChange={state.setViewer}
+            segments={VIEWER_SEGMENTS}
+          />
+        )}
         {mode === 'execution' && (
           <label className="flex items-center gap-2 text-[12.5px] text-fg-subtle">
             <span className="sr-only sm:not-sr-only">Walkthrough</span>
@@ -558,51 +622,27 @@ export function AnatomyExplorer() {
         </Popover>
       </div>
 
-      {tourStep !== null && mode !== 'internal' && !wideEnoughForOverlay && (
-        <ExplorerTour step={tourStep} onStep={setTourStep} onClose={closeTour} placement="inline" />
-      )}
-
       <div className="relative flex min-h-0 flex-1 flex-col xl:flex-row">
-        {treeOpen && (
+        {treeOpen && state.viewer !== 'list' && (
           <aside
             aria-label="Component list"
-            className="absolute inset-y-0 left-0 z-20 flex w-[min(280px,85vw)] flex-col border-r border-ink-700 bg-ink-950/97 backdrop-blur xl:static xl:z-auto xl:bg-ink-950"
+            className="absolute inset-y-0 left-0 z-20 flex w-[min(280px,85vw)] flex-col border-r border-ink-700 bg-ink-950 xl:static xl:z-auto"
           >
-            <div className="border-b border-ink-700 p-2">
-              <div className="flex items-center gap-2 rounded-md border border-ink-600 bg-ink-850 px-2">
-                <Search size={14} aria-hidden className="text-fg-subtle" />
-                <input
-                  type="search"
-                  aria-label="Filter components"
-                  name="component-filter"
-                  autoComplete="off"
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
-                  placeholder="Filter components…"
-                  className="h-8 w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-subtle"
-                />
-              </div>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-1.5">
-              <ComponentTree
-                roots={tree}
-                selectedId={selectedId}
-                explored={progress.explored}
-                filter={filter}
-                onSelect={(id) => {
-                  navigate(id);
-                  if (!wide) setTreeOpen(false);
-                }}
-              />
-            </div>
-            <p className="border-t border-ink-700 px-3 py-2 text-[11.5px] text-fg-subtle">
-              {Object.keys(progress.explored).length} of {Object.keys(COMPONENTS).length} components
-              explored
-            </p>
+            <PartsBrowser
+              tree={tree}
+              selectedId={selectedId}
+              explored={progress.explored}
+              filter={filter}
+              onFilter={setFilter}
+              onSelect={(id) => {
+                navigate(id);
+                if (!wide) setTreeOpen(false);
+              }}
+            />
           </aside>
         )}
 
-        {mode === 'anatomy' && (
+        {mode === 'anatomy' && state.viewer !== 'list' && (
           <div className="border-b border-ink-700 px-3 py-2 sm:hidden">
             <MapToggle
               overview={overview}
@@ -613,7 +653,7 @@ export function AnatomyExplorer() {
         <div
           ref={canvasAreaRef}
           className={cn(
-            'relative min-w-0 xl:h-auto xl:flex-1',
+            'surface-instrument relative min-w-0 bg-ink-950 xl:h-auto xl:flex-1',
             overview ? 'h-[46vh] min-h-[300px]' : 'h-[62vh] min-h-[380px]',
           )}
         >
@@ -652,6 +692,65 @@ export function AnatomyExplorer() {
                 </div>
               </div>
             )
+          ) : state.viewer === '3d' ? (
+            <Viewer3DBoundary
+              fallback={() => (
+                <Notice3D
+                  title="The 3D model could not start"
+                  onUse2D={() => state.setViewer('2d')}
+                  action={
+                    // A browser keeps a failed module download failed for the life of the
+                    // page, so trying again reloads it; the URL keeps the 3D viewer chosen.
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="inline-flex h-9 items-center rounded-md border border-ink-500 px-3 text-[13.5px] text-fg hover:border-exec-400"
+                    >
+                      Try again
+                    </button>
+                  }
+                >
+                  It may not have downloaded (for example while offline before it was ever opened),
+                  or this device could not create a 3D view.
+                </Notice3D>
+              )}
+            >
+              <Suspense fallback={<Loading3D />}>
+                <Anatomy3D
+                  selectedId={selectedId}
+                  mode={mode}
+                  overview={overview}
+                  execution={execution}
+                  follow={follow}
+                  showEdges={layers.edges}
+                  hiddenProvenance={hiddenProvenance}
+                  reducedMotion={reducedMotion}
+                  onSelect={on3DSelect}
+                  onReassemble={() => state.setMode('anatomy')}
+                  onShowList={() => setTreeOpen(true)}
+                  onUse2D={() => state.setViewer('2d')}
+                />
+              </Suspense>
+            </Viewer3DBoundary>
+          ) : state.viewer === 'list' ? (
+            <div className="flex h-full flex-col">
+              <div className="border-b border-ink-700 px-4 py-3">
+                <p className="font-serif text-lg text-fg">Every part, as a list</p>
+                <p className="mt-0.5 text-[13.5px] text-fg-muted">
+                  The same {Object.keys(COMPONENTS).length} parts as the map and the 3D model,
+                  nested the way they contain each other. Select one to read about it; arrow keys
+                  move through the list.
+                </p>
+              </div>
+              <PartsBrowser
+                tree={tree}
+                selectedId={selectedId}
+                explored={progress.explored}
+                filter={filter}
+                onFilter={setFilter}
+                onSelect={(id) => on3DSelect(id as ComponentId)}
+              />
+            </div>
           ) : (
             <AnatomyCanvas
               ref={canvasRef}
@@ -700,7 +799,7 @@ export function AnatomyExplorer() {
             </AnatomyCanvas>
           )}
 
-          {mode === 'anatomy' && (
+          {mode === 'anatomy' && state.viewer !== 'list' && (
             <div className="absolute top-3 left-3 z-10 hidden sm:block">
               <MapToggle
                 overview={overview}
@@ -709,14 +808,18 @@ export function AnatomyExplorer() {
             </div>
           )}
 
-          {tourStep !== null && mode !== 'internal' && wideEnoughForOverlay && (
-            <ExplorerTour step={tourStep} onStep={setTourStep} onClose={closeTour} />
+          {/* The tour card floats over the map from 640 px; CSS picks the placement, so the
+              prerendered page already has the right one and nothing moves on load. */}
+          {tourStep !== null && mode !== 'internal' && state.viewer === '2d' && (
+            <div className="hidden sm:block">
+              <ExplorerTour step={tourStep} onStep={setTourStep} onClose={closeTour} />
+            </div>
           )}
 
-          {hoveredDoc && hoverRect && mode !== 'internal' && (
+          {hoveredDoc && hoverRect && mode !== 'internal' && state.viewer === '2d' && (
             <div
               role="tooltip"
-              className="pointer-events-none absolute z-10 w-[260px] rounded-md border border-ink-500 bg-ink-900/95 p-2.5 text-[12.5px] shadow-xl backdrop-blur"
+              className="pointer-events-none absolute z-10 w-[260px] rounded-md border border-ink-500 bg-ink-900 p-2.5 text-[12.5px] shadow-overlay"
               style={{
                 left: Math.max(
                   8,
@@ -734,16 +837,28 @@ export function AnatomyExplorer() {
             </div>
           )}
 
-          {legendOpen && mode !== 'internal' && (
+          {legendOpen && mode !== 'internal' && state.viewer !== 'list' && (
             <div className="absolute top-3 left-3 z-10 hidden md:block">
               <Legend onClose={() => setLegendOpen(false)} showStates={mode === 'execution'} />
             </div>
           )}
 
-          {selectedId && mode !== 'internal' && (
+          {selectedId && mode !== 'internal' && state.viewer === '2d' && (
             <SelectionCrumb id={selectedId} onNavigate={navigate} />
           )}
         </div>
+
+        {/* On small screens the tour sits under the map instead of covering it. */}
+        {tourStep !== null && mode !== 'internal' && state.viewer === '2d' && (
+          <div className="sm:hidden">
+            <ExplorerTour
+              step={tourStep}
+              onStep={setTourStep}
+              onClose={closeTour}
+              placement="inline"
+            />
+          </div>
+        )}
 
         <aside
           ref={inspectorRef}
@@ -760,13 +875,62 @@ export function AnatomyExplorer() {
   );
 }
 
+/** A filter and the nested list of every part: the side list and the list viewer. */
+function PartsBrowser({
+  tree,
+  selectedId,
+  explored,
+  filter,
+  onFilter,
+  onSelect,
+}: {
+  tree: TreeItem[];
+  selectedId: ComponentId | null;
+  explored: Record<string, number>;
+  filter: string;
+  onFilter: (value: string) => void;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <>
+      <div className="border-b border-ink-700 p-2">
+        <div className="flex items-center gap-2 rounded-md border border-ink-600 bg-ink-850 px-2">
+          <Search size={14} aria-hidden className="text-fg-subtle" />
+          <input
+            type="search"
+            aria-label="Filter components"
+            name="component-filter"
+            autoComplete="off"
+            value={filter}
+            onChange={(event) => onFilter(event.target.value)}
+            placeholder="Filter components…"
+            className="h-8 w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-subtle"
+          />
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-1.5">
+        <ComponentTree
+          roots={tree}
+          selectedId={selectedId}
+          explored={explored}
+          filter={filter}
+          onSelect={onSelect}
+        />
+      </div>
+      <p className="border-t border-ink-700 px-3 py-2 text-[11.5px] text-fg-subtle">
+        {Object.keys(explored).length} of {Object.keys(COMPONENTS).length} components explored
+      </p>
+    </>
+  );
+}
+
 /** Switches between the six main parts and the full map. */
 function MapToggle({ overview, onToggle }: { overview: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="inline-flex h-9 items-center gap-2 rounded-full border border-ink-500 bg-ink-900/90 px-3.5 text-[13.5px] text-fg shadow-lg backdrop-blur transition-colors hover:border-exec-400"
+      className="inline-flex h-9 items-center gap-2 rounded-full border border-ink-500 bg-ink-900 px-3.5 text-[13.5px] text-fg shadow-lg transition-colors hover:border-exec-400"
     >
       {overview ? (
         <>
@@ -846,7 +1010,7 @@ function SelectionCrumb({ id, onNavigate }: { id: ComponentId; onNavigate: (id: 
   return (
     <nav
       aria-label="Selected component path"
-      className="absolute top-3 right-3 z-10 hidden max-w-[50%] rounded-md border border-ink-600 bg-ink-900/90 px-2.5 py-1.5 text-[12px] backdrop-blur lg:block"
+      className="absolute top-3 right-3 z-10 hidden max-w-[50%] rounded-md border border-ink-600 bg-ink-900 px-2.5 py-1.5 text-[12px] lg:block"
     >
       <ol className="flex flex-wrap items-center gap-1 text-fg-subtle">
         {chain.map((doc, index) => (

@@ -53,7 +53,7 @@ export function GlossaryPage() {
         </p>
       </PageHeader>
       <div className="mx-auto max-w-[1240px] px-4 py-10 sm:px-6">
-        <div className="sticky top-14 z-10 -mx-4 flex flex-wrap items-center gap-3 border-b border-ink-700 bg-ink-950/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="sticky top-14 z-10 -mx-4 flex flex-wrap items-center gap-3 border-b border-ink-700 bg-ink-950 px-4 py-3 sm:-mx-6 sm:px-6">
           <label className="flex min-w-[240px] flex-1 items-center gap-2 rounded-md border border-ink-600 bg-ink-850 px-3">
             <Search size={15} aria-hidden className="text-fg-subtle" />
             <span className="sr-only">Search the glossary</span>
@@ -139,7 +139,7 @@ export function GlossaryPage() {
                         <p className="kicker">Where it fits</p>
                         <Link
                           to={`/anatomy?c=${component.id}`}
-                          className="mt-1 inline-flex items-center gap-1.5 text-exec-300 hover:text-exec-200"
+                          className="mt-1 inline-flex min-h-6 items-center gap-1.5 text-exec-300 hover:text-exec-200"
                         >
                           <Crosshair size={14} aria-hidden /> {component.name} in the JVM anatomy
                         </Link>
@@ -156,7 +156,7 @@ export function GlossaryPage() {
                                 <a
                                   href={`#${id}`}
                                   onClick={() => setQuery('')}
-                                  className="rounded border border-ink-600 px-2 py-0.5 text-[13px] text-fg-muted hover:border-rt-500/60 hover:text-rt-200"
+                                  className="inline-flex min-h-6 items-center rounded border border-ink-600 px-2 py-0.5 text-[13px] text-fg-muted hover:border-rt-500/60 hover:text-rt-200"
                                 >
                                   {related.term}
                                 </a>

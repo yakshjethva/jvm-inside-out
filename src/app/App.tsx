@@ -1,21 +1,30 @@
-import { useEffect } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { useEffect, useLayoutEffect } from 'react';
+import type { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
-import { prefetchPages, routes } from './routes';
+import { prefetchPages } from './routes';
 
-/**
- * import.meta.env.BASE_URL is "/" locally and "/<repo>/" on GitHub Pages. Keeping
- * the trailing slash makes links to the home page match the URL Pages serves.
- */
-const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL });
+type Router = ReturnType<typeof createBrowserRouter>;
 
-export function App() {
+export function App({ router }: { router: Router }) {
+  // Prerendered HTML for a different URL stays hidden until React has painted
+  // the right page (see scripts/prerender.mjs); this reveals it.
+  // The app has taken over the page: tests wait for this before interacting.
+  useLayoutEffect(() => {
+    document.documentElement.removeAttribute('data-client-render');
+    document.documentElement.setAttribute('data-hydrated', '');
+  }, []);
+
+  // Other pages are prefetched only after this one has fully loaded.
   useEffect(() => {
-    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    const handle = idle(() => prefetchPages());
+    let timer = 0;
+    const start = () => {
+      timer = window.setTimeout(prefetchPages, 1000);
+    };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
     return () => {
-      if (window.cancelIdleCallback && typeof handle === 'number')
-        window.cancelIdleCallback(handle);
+      window.removeEventListener('load', start);
+      window.clearTimeout(timer);
     };
   }, []);
 

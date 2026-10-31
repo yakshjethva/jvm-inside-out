@@ -111,7 +111,10 @@ export function CodeBlock({
 
   return (
     <figure
-      className={cn('overflow-hidden rounded-md border border-ink-600 bg-ink-900', className)}
+      className={cn(
+        'surface-instrument overflow-hidden rounded-md border border-ink-600 bg-ink-900',
+        className,
+      )}
     >
       <figcaption className="flex items-center justify-between gap-2 border-b border-ink-700 bg-ink-850 px-3 py-1.5">
         <span className="truncate text-[12.5px] text-fg-muted">
@@ -131,7 +134,9 @@ export function CodeBlock({
           </button>
         </span>
       </figcaption>
-      <div className="code-surface" translate="no">
+      {/* Focusable so a keyboard can scroll long lines. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <div className="code-surface" translate="no" tabIndex={0}>
         {usesShiki && html ? (
           // Shiki output is generated locally from our own content (no user input).
           <div dangerouslySetInnerHTML={{ __html: html }} />
@@ -152,7 +157,10 @@ export function CodeBlock({
           </p>
           <pre
             translate="no"
-            className="overflow-x-auto px-3 pt-1 pb-3 text-[12px] leading-relaxed text-ok-300"
+            // Focusable so a keyboard can scroll long lines.
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className="code-output overflow-x-auto px-3 pt-1 pb-3 text-[12px] leading-relaxed text-ok-300"
           >
             {output}
           </pre>

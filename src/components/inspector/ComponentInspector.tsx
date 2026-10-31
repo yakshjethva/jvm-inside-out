@@ -141,7 +141,7 @@ export function ComponentInspector({
                     <button
                       type="button"
                       onClick={() => onNavigate(item.id)}
-                      className="rounded hover:text-exec-200 hover:underline"
+                      className="inline-flex min-h-6 items-center rounded hover:text-exec-200 hover:underline"
                     >
                       {item.name}
                     </button>

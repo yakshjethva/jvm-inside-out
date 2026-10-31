@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /** Collects console errors and warnings, uncaught exceptions and failed requests for a page. */
 function watchForProblems(page: Page) {
@@ -30,17 +31,23 @@ test.describe('GitHub Pages deployment', () => {
 
     const response = await page.goto('./');
     expect(response?.status()).toBe(200);
-    await expect(page).toHaveTitle('Inside Java · Understand Java from the inside out');
+    await expect(page).toHaveTitle('JVM Atlas · Explore the machine behind Java programs');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Ever wondered what happens when you run Java code?',
+      'Explore the machine behind every Java program.',
     );
-    await expect(page.getByRole('link', { name: 'Start learning' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Explore the anatomy' })).toHaveAttribute(
+      'href',
+      /\/anatomy$/,
+    );
+    await expect(page.getByRole('link', { name: 'Start with the basics' })).toHaveAttribute(
       'href',
       /\/start$/,
     );
-    await expect(
-      page.getByRole('link', { name: 'I already know Java. Explore the JVM.' }),
-    ).toBeVisible();
+    const areas = page.getByRole('list', {
+      name: 'The areas of the atlas, from source code to processor',
+    });
+    await expect(areas.getByRole('link')).toHaveCount(7);
+    await expect(areas.getByRole('link', { name: /Class loading/ })).toBeVisible();
     await expect(page.getByRole('figure', { name: /Follow one line of Java/ })).toBeVisible();
 
     await page.waitForLoadState('networkidle');
@@ -69,7 +76,7 @@ test.describe('GitHub Pages deployment', () => {
     const response = await page.goto('anatomy?c=heap');
     expect(response?.status()).toBe(200);
     await expect(page).toHaveURL(/\/anatomy\/?\?c=heap$/);
-    await expect(page).toHaveTitle('Explore the JVM · Inside Java');
+    await expect(page).toHaveTitle('JVM anatomy · JVM Atlas');
     await expect(page.getByRole('heading', { level: 2, name: 'Heap', exact: true })).toBeVisible();
   });
 
@@ -81,16 +88,18 @@ test.describe('GitHub Pages deployment', () => {
     ).toBeVisible();
     await page.getByRole('link', { name: 'Go home' }).click();
     await expect(page).toHaveURL(baseURL!);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Ever wondered');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Explore the machine');
   });
 });
 
 test.describe('navigation', () => {
   const pages = [
     ['Start here', 'What happens when you run a Java program?', 'Start here'],
+    ['Explore anatomy', 'Explore the JVM', 'JVM anatomy'],
     ['Learn', 'Start with a question', 'Learn'],
-    ['Explore the JVM', 'Explore the JVM', 'Explore the JVM'],
     ['Glossary', 'Glossary', 'Glossary'],
+    ['References', 'References', 'References'],
+    ['About', "Don't memorize the JVM. Explore it.", 'About'],
   ] as const;
 
   test('the primary navigation reaches every page', async ({ page, isMobile }) => {
@@ -101,32 +110,22 @@ test.describe('navigation', () => {
       const nav = page.getByRole('navigation', { name: isMobile ? 'Mobile' : 'Primary' });
       await nav.getByRole('link', { name: new RegExp(`^${label}`) }).click();
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
-      await expect(page).toHaveTitle(`${title} · Inside Java`);
+      await expect(page).toHaveTitle(`${title} · JVM Atlas`);
     }
     expect(problems).toEqual([]);
   });
 
-  test('reference and project pages are under More', async ({ page, isMobile }) => {
+  test('project pages are in the mobile menu and the footer', async ({ page, isMobile }) => {
     await page.goto('./');
-    const open = async () => {
-      if (isMobile) await page.getByRole('button', { name: 'Open menu' }).click();
-      else
-        await page
-          .getByRole('navigation', { name: 'Primary' })
-          .getByRole('button', { name: 'More' })
-          .click();
-    };
-    const scope = () =>
-      isMobile ? page.getByRole('navigation', { name: 'Mobile' }) : page.locator('header');
-    await open();
-    await scope()
-      .getByRole('link', { name: /^References/ })
-      .click();
-    await expect(page.getByRole('heading', { level: 1, name: 'References' })).toBeVisible();
-    await open();
-    await scope()
-      .getByRole('link', { name: /^Project status/ })
-      .click();
+    if (isMobile) {
+      await page.getByRole('button', { name: 'Open menu' }).click();
+      await page
+        .getByRole('navigation', { name: 'Mobile' })
+        .getByRole('link', { name: 'Project status' })
+        .click();
+    } else {
+      await page.getByRole('contentinfo').getByRole('link', { name: 'Project status' }).click();
+    }
     await expect(page).toHaveURL(/\/about#project-status$/);
     await expect(page.getByRole('heading', { level: 2, name: 'Project status' })).toBeVisible();
   });
@@ -135,7 +134,7 @@ test.describe('navigation', () => {
     await page.goto('./');
     const footer = page.getByRole('contentinfo');
     await footer.getByRole('link', { name: 'About', exact: true }).click();
-    await expect(page).toHaveTitle('About · Inside Java');
+    await expect(page).toHaveTitle('About · JVM Atlas');
     await page.getByRole('contentinfo').getByRole('link', { name: 'Contributing' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Contributing' })).toBeVisible();
   });
@@ -178,7 +177,7 @@ test.describe('offline', () => {
     await context.setOffline(true);
 
     await page.reload();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Ever wondered');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Explore the machine');
 
     await page.goto('start?chapter=gc');
     await expect(page.getByRole('heading', { level: 1, name: 'Garbage collection' })).toBeVisible();
@@ -189,5 +188,31 @@ test.describe('offline', () => {
     ).toBeVisible();
     await page.getByRole('radio', { name: /Watch it run/ }).click();
     await expect(page.getByText('Step 1 of', { exact: false })).toBeVisible();
+  });
+});
+
+test.describe('small screens', () => {
+  test('no page scrolls sideways on a 360 px screen', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Checked once, on the mobile project.');
+    await page.setViewportSize({ width: 360, height: 780 });
+    for (const path of [
+      './',
+      'start?chapter=memory',
+      'learn',
+      'learn/heap-vs-stack',
+      'anatomy',
+      'anatomy?viewer=list',
+      'anatomy?mode=execution&s=jit',
+      'glossary',
+      'references',
+      'contributing',
+    ]) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, path).toBe(0);
+    }
   });
 });

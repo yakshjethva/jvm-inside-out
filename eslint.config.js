@@ -7,7 +7,14 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results', '.claude']),
+  globalIgnores([
+    'dist',
+    'dist-server',
+    'coverage',
+    'playwright-report',
+    'test-results',
+    '.claude',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -31,6 +38,11 @@ export default defineConfig([
   {
     // Dissection plates export a data object that embeds its SVG component.
     files: ['src/modules/jvm/internals/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // The build-time server entry exports render helpers; it is never hot-reloaded.
+    files: ['src/entry-server.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   {

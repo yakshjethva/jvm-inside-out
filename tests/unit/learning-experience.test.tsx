@@ -115,23 +115,42 @@ describe('the journey machine', () => {
 });
 
 describe('the site header', () => {
-  it('keeps reference pages under More, as a disclosure that Escape closes', async () => {
-    const user = userEvent.setup();
+  it('lists every main page in the order a new visitor needs them', () => {
     renderAt(<SiteHeader />);
     const primary = screen.getByRole('navigation', { name: 'Primary' });
     expect(
       within(primary)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Start here', 'Learn', 'Explore the JVM', 'Glossary']);
-    const more = within(primary).getByRole('button', { name: 'More' });
-    expect(more).toHaveAttribute('aria-expanded', 'false');
-    await user.click(more);
-    expect(more).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('link', { name: /References/ })).toBeVisible();
+    ).toEqual(['Start here', 'Explore anatomy', 'Learn', 'Glossary', 'References', 'About']);
+    expect(screen.getByRole('link', { name: 'JVM Atlas, home' })).toHaveAttribute('href', '/');
+  });
+
+  it('opens a mobile menu with Home and the project pages', async () => {
+    const user = userEvent.setup();
+    renderAt(<SiteHeader />);
+    const button = screen.getByRole('button', { name: 'Open menu' });
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    await user.click(button);
+    const menu = screen.getByRole('navigation', { name: 'Mobile' });
+    expect(within(menu).getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
+    expect(within(menu).getByRole('link', { name: 'Contributing' })).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Project status' })).toHaveAttribute(
+      'href',
+      '/about#project-status',
+    );
+    await user.click(screen.getByRole('button', { name: 'Close menu' }));
+    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
+  });
+
+  it('closes the mobile menu with Escape and returns focus to its button', async () => {
+    const user = userEvent.setup();
+    renderAt(<SiteHeader />);
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('navigation', { name: 'Mobile' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
-    expect(more).toHaveAttribute('aria-expanded', 'false');
-    expect(more).toHaveFocus();
+    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open menu' })).toHaveFocus();
   });
 
   it('shows the explanation level in plain words', () => {
@@ -151,12 +170,12 @@ describe('page titles', () => {
     const staticTitle = indexHtml.match(/<title>([^<]*)<\/title>/)![1];
     render(<Titled />);
     expect(document.title).toBe(staticTitle);
-    expect(document.title).toBe('Inside Java · Understand Java from the inside out');
+    expect(document.title).toBe('JVM Atlas · Explore the machine behind Java programs');
   });
 
   it('name the page first everywhere else', () => {
     render(<Titled title="Glossary" />);
-    expect(document.title).toBe('Glossary · Inside Java');
+    expect(document.title).toBe('Glossary · JVM Atlas');
   });
 });
 

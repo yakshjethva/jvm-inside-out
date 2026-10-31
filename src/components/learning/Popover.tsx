@@ -100,9 +100,10 @@ export function Popover({
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         width: `min(${width}px, calc(100vw - ${MARGIN * 2}px))`,
-        maxHeight: `calc(100vh - ${MARGIN * 2}px)`,
+        // Never past the bottom of the screen: a tall panel scrolls inside itself.
+        maxHeight: `calc(100dvh - ${(position?.top ?? MARGIN) + MARGIN}px)`,
       }}
-      className="z-50 overflow-y-auto rounded-lg border border-ink-500 bg-ink-850/98 shadow-[0_24px_64px_-16px_rgb(0_0_0/0.8)] backdrop-blur outline-none"
+      className="z-50 overflow-y-auto overscroll-contain rounded-lg border border-ink-500 bg-ink-850 shadow-overlay outline-none"
     >
       {children}
     </div>,

@@ -6,7 +6,6 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
-import { STATIC_ROUTES } from './src/app/routePaths.ts';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,39 +18,37 @@ function resolveBase(raw: string | undefined): string {
 
 /** Fonts subsets precached for offline use; other subsets are cached when first used. */
 const PRECACHED_FONT = /-latin-[a-z]+-normal-[\w-]+\.woff2$/;
+/**
+ * Not precached: the 3D viewer (Three.js) is downloaded only by readers who
+ * open it, and then cached by the service worker on first use.
+ */
+const ON_DEMAND = /^Anatomy3D-/;
 
 /**
- * GitHub Pages has no rewrite rules. After the build we write:
- *  - 404.html: unknown paths still boot the single-page app;
- *  - <route>/index.html: known routes answer with HTTP 200 and their own <title>;
- *  - sw.js: the service worker, prefixed with the list of files to precache.
+ * Writes sw.js after the client build: the service worker, prefixed with its
+ * cache version and the list of files to precache. Route HTML, 404.html, the
+ * sitemap and robots.txt are written afterwards by scripts/prerender.mjs.
  */
-function githubPagesOutput(): Plugin {
+function serviceWorkerOutput(): Plugin {
   let outDir = path.join(root, 'dist');
+  let ssr = false;
   return {
-    name: 'inside-java:github-pages-output',
+    name: 'jvm-atlas:service-worker',
     apply: 'build',
     configResolved(config) {
       outDir = path.resolve(config.root, config.build.outDir);
+      ssr = Boolean(config.build.ssr);
     },
     closeBundle() {
       const indexFile = path.join(outDir, 'index.html');
-      if (!fs.existsSync(indexFile)) return;
+      if (ssr || !fs.existsSync(indexFile)) return;
       const html = fs.readFileSync(indexFile, 'utf8');
-      fs.writeFileSync(path.join(outDir, '404.html'), html);
-      for (const route of STATIC_ROUTES) {
-        const dir = path.join(outDir, route.path);
-        fs.mkdirSync(dir, { recursive: true });
-        const titled = html.replace(
-          /<title>[^<]*<\/title>/,
-          `<title>${route.title} · Inside Java</title>`,
-        );
-        fs.writeFileSync(path.join(dir, 'index.html'), titled);
-      }
-
       const assets = fs
         .readdirSync(path.join(outDir, 'assets'))
-        .filter((file) => /\.(js|css)$/.test(file) || PRECACHED_FONT.test(file))
+        .filter(
+          (file) =>
+            (/\.(js|css)$/.test(file) && !ON_DEMAND.test(file)) || PRECACHED_FONT.test(file),
+        )
         .sort()
         .map((file) => `assets/${file}`);
       const precache = ['./', 'favicon.svg', ...assets];
@@ -69,20 +66,22 @@ function githubPagesOutput(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   base: resolveBase(process.env.BASE_PATH),
-  plugins: [react(), tailwindcss(), githubPagesOutput()],
+  plugins: [react(), tailwindcss(), serviceWorkerOutput()],
   resolve: {
     alias: { '@': path.join(root, 'src') },
   },
   build: {
     sourcemap: false,
     chunkSizeWarningLimit: 700,
+    // The SSR bundle only renders HTML; static files come from the client build.
+    copyPublicDir: !isSsrBuild,
   },
   test: {
     environment: 'jsdom',
-    include: ['tests/unit/**/*.test.{ts,tsx}'],
+    include: ['tests/unit/**/*.test.{ts,tsx}', 'src/**/tests/*.test.{ts,tsx}'],
     setupFiles: ['tests/unit/setup.ts'],
     css: false,
   },
-});
+}));

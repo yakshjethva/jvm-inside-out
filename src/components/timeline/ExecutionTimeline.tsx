@@ -25,7 +25,7 @@ export function ExecutionTimeline({
               aria-current={isCurrent ? 'step' : undefined}
               aria-label={`Step ${index + 1}: ${step.title}`}
               title={`${index + 1}. ${step.title}`}
-              className="group block w-full py-2"
+              className="group block min-h-6 w-full py-2"
             >
               <span
                 className={cn(

@@ -13,6 +13,36 @@
       "skillPath": "skills/test-driven-development/SKILL.md",
       "computedHash": "3cfe4ebb6fa7288f668d87880d279c8e48f7a92b63415e296857060f5ce22e05"
     },
+    "threejs-accessibility": {
+      "source": "cesartevisual/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-accessibility/SKILL.md",
+      "computedHash": "2c866d8bc524fd18ac28306068f1c2c1a95561ba5a787272228519850a2c3c47"
+    },
+    "threejs-assets": {
+      "source": "cesartevisual/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-assets/SKILL.md",
+      "computedHash": "82bf9dd94187c283a4282cebcdc0e81bbbfadda8828be41dc54701f429c09f0c"
+    },
+    "threejs-performance": {
+      "source": "cesartevisual/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-performance/SKILL.md",
+      "computedHash": "affa549534f18bd2f498ea3073f107e1127c4673c3b49171f33c9dfc5291baea"
+    },
+    "threejs-r3f": {
+      "source": "cesartevisual/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-r3f/SKILL.md",
+      "computedHash": "fb668b83389e0d18c209b8dd937422d5714543edaf760db792344c71cbcea9b7"
+    },
+    "threejs-testing": {
+      "source": "cesartevisual/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-testing/SKILL.md",
+      "computedHash": "034f20e648f8ae1e68999dfdada8535a737cb9300b1f3d62010403a8d4b9c768"
+    },
     "verification-before-completion": {
       "source": "obra/superpowers",
       "sourceType": "github",

@@ -1,6 +1,6 @@
 /* global PRECACHE, VERSION */
 /**
- * Inside Java service worker. After the first visit the site keeps working
+ * JVM Atlas service worker. After the first visit the site keeps working
  * offline, including reloads: the build output is precached, pages are
  * fetched network-first (so a new deployment is picked up at once) and fall
  * back to the cached application shell when the network is unavailable.
@@ -8,7 +8,7 @@
  * The build prepends PRECACHE (scope-relative URLs) and VERSION; see
  * vite.config.ts. The app registers it in production only.
  */
-const CACHE = `inside-java-${VERSION}`;
+const CACHE = `jvm-atlas-${VERSION}`;
 const scope = self.registration.scope;
 
 self.addEventListener('install', (event) => {
@@ -27,7 +27,11 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('inside-java-') && key !== CACHE)
+            // Also clears caches from before the rename to JVM Atlas.
+            .filter(
+              (key) =>
+                (key.startsWith('jvm-atlas-') || key.startsWith('inside-java-')) && key !== CACHE,
+            )
             .map((key) => caches.delete(key)),
         ),
       )

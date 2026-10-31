@@ -60,7 +60,7 @@ export function AnatomyPreview() {
 
       {doc && selectedId && (
         <div
-          className="absolute top-3 left-3 w-[min(340px,calc(100%-1.5rem))] rounded-lg border border-ink-500 bg-ink-900/95 p-4 shadow-2xl backdrop-blur"
+          className="absolute top-3 left-3 w-[min(340px,calc(100%-1.5rem))] rounded-lg border border-ink-500 bg-ink-900 p-4 shadow-overlay"
           role="status"
           aria-live="polite"
         >

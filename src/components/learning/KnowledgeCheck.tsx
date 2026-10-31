@@ -143,7 +143,7 @@ function Question({
                 onChange={() => onAnswer(option.id)}
                 className="mt-1 accent-[var(--color-exec-500)]"
               />
-              <span className="flex-1">
+              <span className="min-w-0 flex-1">
                 <RichText className="prose-ij text-[14px] text-fg" text={option.text} />
               </span>
               {showCorrect && (

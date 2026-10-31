@@ -20,7 +20,7 @@ export function AboutPage() {
     <>
       <PageHeader kicker="About" title="Don't memorize the JVM. Explore it.">
         <p>
-          Inside Java is an open-source, interactive atlas of Java and JVM internals. It is built
+          JVM Atlas is an open-source, interactive atlas of the Java Virtual Machine. It is built
           for people who want an accurate mental model of how Java actually runs, from absolute
           beginners to engineers preparing for JVM interviews.
         </p>
@@ -34,7 +34,7 @@ export function AboutPage() {
             happens when a line of Java runs.
           </p>
           <p>
-            Inside Java starts with a question a beginner already has, follows one small program
+            JVM Atlas starts with a question a beginner already has, follows one small program
             through the machine, and then lets you take the machine apart. Every part is selectable,
             connected and dissected, explained simply and in depth (with a developer level for the
             core concepts and the first lesson), and every walkthrough uses real output from a real
@@ -87,7 +87,7 @@ export function AboutPage() {
         </Block>
         <Block title="Project status" id="project-status">
           <p>
-            Inside Java is built one milestone at a time, and only finished experiences are linked
+            JVM Atlas is built one milestone at a time, and only finished experiences are linked
             from the site. This is where things stand.
           </p>
           <table className="mt-4 w-full border-collapse text-left text-[14.5px]">
@@ -143,9 +143,7 @@ export function AboutPage() {
             The code and content are MIT licensed. Fonts (Inter, JetBrains Mono, Source Serif 4) are
             bundled under the SIL Open Font License. Third-party licenses are listed in{' '}
             <code>THIRD_PARTY_NOTICES.md</code> in the <a href={SITE.repository}>repository</a>.
-            Java and OpenJDK are trademarks or registered trademarks of Oracle and/or its
-            affiliates; this project is independent and not affiliated with Oracle or the OpenJDK
-            project.
+            {SITE.independence} {SITE.trademarks} JVM Atlas is not part of the OpenJDK project.
           </p>
         </Block>
       </div>

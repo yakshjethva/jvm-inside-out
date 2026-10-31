@@ -52,7 +52,7 @@ export function ContributingPage() {
     <>
       <PageHeader kicker="Open source" title="Contributing">
         <p>
-          Inside Java grows one verified explanation at a time. You can fix an error, improve an
+          JVM Atlas grows one verified explanation at a time. You can fix an error, improve an
           explanation, add a glossary term, or build the next laboratory. The full guide is{' '}
           <code>CONTRIBUTING.md</code> in the{' '}
           <a href={SITE.repository} className="text-exec-300 underline underline-offset-2">

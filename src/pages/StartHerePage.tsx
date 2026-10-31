@@ -261,6 +261,12 @@ function ChapterView({
   const { preferences, setLevel } = usePreferences();
   const [chosen, setChosen] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(done);
+  // Progress arrives after hydration: a finished chapter opens revealed.
+  const [seenDone, setSeenDone] = useState(done);
+  if (done !== seenDone) {
+    setSeenDone(done);
+    if (done) setRevealed(true);
+  }
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previous = CHAPTERS[index - 1];
   const next = CHAPTERS[index + 1];

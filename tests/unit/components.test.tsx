@@ -307,10 +307,12 @@ describe('JVM anatomy page', () => {
     const user = userEvent.setup();
     preferencesStore.reset();
     const first = renderInRouter(<JvmAnatomyPage />, '/anatomy');
+    // jsdom applies no CSS: both placements (over the map, and under it on small
+    // screens) are present here; a browser shows exactly one (see the e2e tests).
     expect(
-      await screen.findByRole('region', { name: 'Guided tour of the explorer' }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close the tour' }));
+      await screen.findAllByRole('region', { name: 'Guided tour of the explorer' }),
+    ).toHaveLength(2);
+    await user.click(screen.getAllByRole('button', { name: 'Close the tour' })[0]!);
     expect('explorer-tour' in preferencesStore.get().dismissed).toBe(true);
     first.unmount();
     renderInRouter(<JvmAnatomyPage />, '/anatomy');
@@ -327,8 +329,8 @@ describe('JVM anatomy page', () => {
     // jsdom applies no CSS, so the button's visible and screen-reader labels both count here.
     await user.click((await screen.findAllByRole('button', { name: /^Guided tour/ }))[0]!);
     expect(
-      await screen.findByRole('region', { name: 'Guided tour of the explorer' }),
-    ).toBeInTheDocument();
+      (await screen.findAllByRole('region', { name: 'Guided tour of the explorer' })).length,
+    ).toBeGreaterThan(0);
     expect(router.state.location.search).not.toContain('mode=internal');
   });
 

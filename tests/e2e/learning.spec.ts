@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const chapterHeading = (page: Page, name: string) =>
   page.getByRole('heading', { level: 1, name, exact: true });
@@ -12,7 +13,7 @@ test.describe('Start here', () => {
     });
 
     await page.goto('./');
-    await page.getByRole('link', { name: 'Start learning' }).click();
+    await page.getByRole('link', { name: 'Start with the basics' }).click();
     await page.getByRole('link', { name: /Start chapter 1/ }).click();
 
     const titles = [

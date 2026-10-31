@@ -195,7 +195,7 @@ export function ComponentTree({
             />
             <span className="truncate">{item.name}</span>
             {explored[item.id] !== undefined && (
-              <span className="ml-auto text-[10px] text-ok-400" title="Explored">
+              <span className="ml-auto text-[11px] text-ok-400" title="Explored">
                 ✓<span className="sr-only"> explored</span>
               </span>
             )}

@@ -1,6 +1,6 @@
-# Contributing to Inside Java
+# Contributing to JVM Atlas
 
-Thank you for helping. Inside Java grows one verified explanation at a time: you can fix an
+Thank you for helping. JVM Atlas grows one verified explanation at a time: you can fix an
 error, sharpen an explanation, add a glossary term, improve accessibility, or build the next
 laboratory. This guide explains how the project is organised and what a pull request needs.
 
@@ -44,25 +44,28 @@ npm run test:e2e
 
 ## Where things live
 
-| Path                                    | Contents                                                         |
-| --------------------------------------- | ---------------------------------------------------------------- |
-| `src/content/jvm/components/*.ts`       | One entry per anatomy component: explanations, example, sources  |
-| `src/content/jvm/teaching.ts`           | The teaching layer of the core concepts (levels, analogy, check) |
-| `src/content/jvm/regions.ts`            | The six main parts shown by the explorer overview                |
-| `src/content/lesson/firstRun.ts`        | The Start here lesson: chapters, predictions, listings, quiz     |
-| `src/modules/lesson/exhibits/`          | The lesson's interactive exhibits (reused by the inspector)      |
-| `src/simulators/`                       | Pure models behind the exhibits, with unit tests                 |
-| `src/content/jvm/ids.ts`                | The list of component ids                                        |
-| `src/content/jvm/relationships.ts`      | Connectors between components                                    |
-| `src/content/jvm/scenarios.ts`          | Execution walkthroughs, step by step                             |
-| `src/content/jvm/quiz.ts`               | The anatomy knowledge check                                      |
-| `src/content/paths.ts`                  | The curriculum by subject (Learn page)                           |
-| `src/content/questions.ts`              | The question-led paths (Learn page)                              |
-| `src/glossary/terms.ts`                 | Glossary entries                                                 |
-| `src/data/references.ts`                | The source registry                                              |
-| `src/modules/jvm/layout.ts`             | Plate coordinates and connector routes (kept apart from content) |
-| `src/modules/jvm/internals/plates/`     | Hand-drawn dissections for Internal mode                         |
-| `tests/unit/content-integrity.test.tsx` | Checks every id, link, citation, route and layout constraint     |
+| Path                                      | Contents                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| `src/content/jvm/components/*.ts`         | One entry per anatomy component: explanations, example, sources  |
+| `src/content/jvm/teaching.ts`             | The teaching layer of the core concepts (levels, analogy, check) |
+| `src/content/jvm/regions.ts`              | The six main parts of the explorer overview, and the seven areas |
+| `src/content/topics.ts`                   | The guides at `/learn/<slug>`, composed from existing content    |
+| `src/seo/pages.ts`                        | Every public route's title and description (prerender, sitemap)  |
+| `src/content/lesson/firstRun.ts`          | The Start here lesson: chapters, predictions, listings, quiz     |
+| `src/modules/lesson/exhibits/`            | The lesson's interactive exhibits (reused by the inspector)      |
+| `src/simulators/`                         | Pure models behind the exhibits, with unit tests                 |
+| `src/content/jvm/ids.ts`                  | The list of component ids                                        |
+| `src/content/jvm/relationships.ts`        | Connectors between components                                    |
+| `src/content/jvm/scenarios.ts`            | Execution walkthroughs, step by step                             |
+| `src/content/jvm/quiz.ts`                 | The anatomy knowledge check                                      |
+| `src/content/paths.ts`                    | The curriculum by subject (Learn page)                           |
+| `src/content/questions.ts`                | The question-led paths (Learn page)                              |
+| `src/glossary/terms.ts`                   | Glossary entries                                                 |
+| `src/data/references.ts`                  | The source registry                                              |
+| `src/modules/jvm/layout.ts`               | Plate coordinates and connector routes (kept apart from content) |
+| `src/modules/anatomy-3d/data/layout3d.ts` | 3D positions derived from the plate (a teaching layout)          |
+| `src/modules/jvm/internals/plates/`       | Hand-drawn dissections for Internal mode                         |
+| `tests/unit/content-integrity.test.tsx`   | Checks every id, link, citation, route and layout constraint     |
 
 ### Writing text
 

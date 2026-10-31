@@ -2,7 +2,7 @@
 
 **One machine. One source of truth. Multiple levels of understanding.**
 
-This document describes how Inside Java teaches: the navigation, the first lesson, how the JVM
+This document describes how JVM Atlas teaches: the navigation, the first lesson, how the JVM
 explorer is entered, how the inspector discloses depth, and the three explanation levels. It
 complements [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md), which covers the technical
 architecture and milestones.
@@ -38,38 +38,42 @@ too much too early:
 ## 3. Navigation
 
 ```text
-Inside Java   [Start here] [Learn] [Explore the JVM] [Glossary] [More ▾]      (level) (menu)
-                                                               └ References
-                                                                 About
-                                                                 Contributing
-                                                                 Project status
+JVM Atlas   Start here · Explore anatomy · Learn · Glossary · References · About     (level) (menu)
 ```
 
-- **Start here** (`/start`): the guided first lesson.
-- **Learn** (`/paths`): learning paths, each beginning with a question.
-- **Explore the JVM** (`/anatomy`): the explorer. Existing deep links keep working.
-- **More** groups reference and project pages. Mobile shows the same items in the same order.
+- The logo is the link home. **Start here** (`/start`): the guided first lesson. **Explore
+  anatomy** (`/anatomy`): the explorer, with the 2D map, the 3D model and the list. **Learn**
+  (`/learn`): ten guides and the learning paths, each beginning with a question (the earlier
+  address `/paths` still works). **Glossary**, **References** and **About** complete the bar.
+- The mobile menu lists Home, the same six pages, then Contributing, Project status and the
+  source code. The footer links the primary and project pages.
 - The level control in the header reads "Simple", "Developer" or "Deep dive".
 
 ## 4. Homepage
 
-1. **Hero:** "Ever wondered what happens when you run Java code?", one supporting sentence,
-   _Start learning_ (→ `/start`) and _I already know Java. Explore the JVM._ (→ `/anatomy`).
-   A returning learner also sees "Continue with chapter n".
-2. **The visual journey** (beside the hero on wide screens, below it on phones): the **journey
-   machine**, an editable line of Java and a _Run it_ button. Running it follows the line through
-   seven stations: compiler, class file, class loader, memory, execution engine, CPU and
-   operating system, output. The three JVM stations are bracketed. Each station can be paused,
-   stepped and revisited, shows its evidence (a command, bytes, a log line, bytecode) and links
-   to the chapter that explains it. The bytecode and class-file size are real `javac` 25.0.4
-   output for that class; only the string constant changes.
-3. **What you'll discover:** four questions, each linked to the chapter that answers it.
-4. **Start with one question:** the seven chapters of Start here, with progress.
-5. **Already write Java?** Direct routes to the full map, a dissection, a verified walkthrough
-   and the sources, beside a live preview of the full plate. The statistics live here, not in
-   the hero.
-6. **How we keep it accurate:** three short paragraphs with links to the policy and the
-   references.
+The homepage introduces the atlas before it teaches, and every section leads somewhere:
+
+1. **Hero** (the dark instrument surface): "Explore the machine behind every Java program.",
+   "Understand the Java Virtual Machine from the first instruction to the runtime systems that
+   execute it.", _Explore the anatomy_ (→ `/anatomy`) and _Start with the basics_ (→ `/start`).
+   Beside it, an original drawing of the seven areas (build time, the five JVM regions, the
+   platform) as an exploded stack, each label a link into the atlas, with a caption that says
+   the layers are drawn apart for clarity and are not a memory map. A returning learner also sees
+   "Continue with chapter n".
+2. **Architecture:** the live 2D plate (it loads when it comes near the screen), links to the six
+   regions and the full map, and the parts explored most recently.
+3. **Three depths:** the stack frame explained at Simple, Developer and Deep dive, side by side.
+4. **Subsystems:** the seven areas with their component counts and roles.
+5. **Start here:** the first lesson's seven chapters with progress, the **journey machine** (an
+   editable line of Java followed through compiler, class file, class loader, memory, execution
+   engine, CPU and operating system, and output, with real `javac` 25.0.4 bytecode) and the first
+   guides.
+6. **Exhibits:** four walkthroughs and two dissections, each with its step count or summary.
+7. **Accuracy:** simple is short, never false; the provenance line styles; the number of primary
+   sources.
+8. **The project:** independent, free and open, with About, Contributing and the source code.
+
+The page is meaningful before any script runs (it is prerendered) and never loads Three.js.
 
 The laboratory status table moves to About → Project status. The curriculum moves to Learn.
 

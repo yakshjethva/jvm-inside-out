@@ -7,6 +7,10 @@ import type { MapView } from '@/hooks/useLearningState';
 export const MODES = ['anatomy', 'exploded', 'internal', 'execution'] as const;
 export type ExplorerMode = (typeof MODES)[number];
 
+/** How the machine is shown: the 2D plate (default), the 3D model, or a plain list. */
+export const VIEWERS = ['2d', '3d', 'list'] as const;
+export type ExplorerViewer = (typeof VIEWERS)[number];
+
 /** `view=overview` or `view=full`; absent means "the learner's last choice". */
 const isView = (value: string | null): value is MapView => value === 'overview' || value === 'full';
 
@@ -15,7 +19,7 @@ const isMode = (value: string | null): value is ExplorerMode =>
 
 /**
  * Explorer state that belongs in the URL (shareable, back-button friendly):
- * selected component, mode, scenario and step.
+ * selected component, mode, viewer, scenario and step.
  */
 export function useAnatomyState() {
   const [params, setParams] = useSearchParams();
@@ -29,6 +33,8 @@ export function useAnatomyState() {
     ? params.get('s')!
     : SCENARIOS[0]!.id;
   const scenario = SCENARIOS.find((s) => s.id === scenarioId)!;
+  const rawViewer = params.get('viewer');
+  const viewer: ExplorerViewer = rawViewer === '3d' || rawViewer === 'list' ? rawViewer : '2d';
   const rawView = params.get('view');
   const view: MapView | null = isView(rawView) ? rawView : null;
   const rawStep = Number(params.get('step') ?? '0');
@@ -57,10 +63,14 @@ export function useAnatomyState() {
     () => ({
       selectedId,
       mode,
+      viewer,
       view,
       scenario,
       step,
       setView: (next: MapView) => update({ view: next }, true),
+      setViewer: (next: ExplorerViewer) => update({ viewer: next === '2d' ? null : next }),
+      /** The 2D map, leaving "Look inside" for the overview: one history entry. */
+      showMap: () => update({ viewer: null, ...(mode === 'internal' ? { mode: null } : {}) }),
       select: (id: ComponentId | null) => update({ c: id }),
       setMode: (next: ExplorerMode) => update({ mode: next === 'anatomy' ? null : next }),
       setScenario: (id: string) => update({ s: id, step: null }, true),
@@ -69,6 +79,6 @@ export function useAnatomyState() {
       watch: (scenarioId: string, index: number) =>
         update({ mode: 'execution', s: scenarioId, step: index === 0 ? null : String(index) }),
     }),
-    [selectedId, mode, view, scenario, step, update],
+    [selectedId, mode, viewer, view, scenario, step, update],
   );
 }

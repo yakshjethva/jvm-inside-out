@@ -194,11 +194,18 @@ export const preferenceActions = {
   },
 };
 
+/**
+ * The server render, and the hydration pass that must match it, use the
+ * defaults; React then re-renders with what this browser has stored.
+ */
+const serverPreferences = () => DEFAULT_PREFERENCES;
+const serverProgress = () => EMPTY_PROGRESS;
+
 export function usePreferences() {
   const preferences = useSyncExternalStore(
     preferencesStore.subscribe,
     preferencesStore.get,
-    preferencesStore.get,
+    serverPreferences,
   );
   return {
     preferences,
@@ -208,7 +215,7 @@ export function usePreferences() {
 }
 
 export function useProgress() {
-  return useSyncExternalStore(progressStore.subscribe, progressStore.get, progressStore.get);
+  return useSyncExternalStore(progressStore.subscribe, progressStore.get, serverProgress);
 }
 
 const RECENT_LIMIT = 8;

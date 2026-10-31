@@ -1,0 +1,239 @@
+<!doctype html>
+<!--
+  JVM Atlas brand artwork, rendered to PNG by scripts/brand/render-assets.mjs.
+  ?kind=og draws the 1200x630 social card; ?kind=icon&size=N draws an app icon.
+  The stack shows the explorer's six regions as separated slabs: the five
+  regions of the JVM and, at the bottom, the platform it runs on (dotted in the
+  site, not part of the JVM). A pedagogical layout, not a picture of memory.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        src: url('../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+          format('woff2');
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: 'Source Serif';
+        src: url('../../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2')
+          format('woff2');
+        font-weight: 200 900;
+      }
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      svg {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <svg id="art" xmlns="http://www.w3.org/2000/svg"></svg>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const kind = params.get('kind') ?? 'og';
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.getElementById('art');
+      const el = (name, attrs, parent = svg) => {
+        const node = document.createElementNS(NS, name);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        parent.appendChild(node);
+        return node;
+      };
+
+      // Isometric projection: x to the right-down, z to the left-down, y up.
+      const C = Math.cos(Math.PI / 6),
+        S = Math.sin(Math.PI / 6);
+      const iso = (x, y, z, ox, oy, k) => [ox + (x - z) * C * k, oy + ((x + z) * S - y) * k];
+      const pts = (list) => list.map((p) => p.map((n) => n.toFixed(2)).join(',')).join(' ');
+
+      /** One slab: top, left and right faces with a lit top edge. */
+      function slab({ w, d, h, y, ox, oy, k, tint, label }) {
+        const g = el('g', {});
+        const P = (x, yy, z) => iso(x - w / 2, yy, z - d / 2, ox, oy, k);
+        const top = [P(0, y + h, 0), P(w, y + h, 0), P(w, y + h, d), P(0, y + h, d)];
+        const right = [P(w, y + h, 0), P(w, y, 0), P(w, y, d), P(w, y + h, d)];
+        const left = [P(0, y + h, d), P(w, y + h, d), P(w, y, d), P(0, y, d)];
+        el('polygon', { points: pts(left), fill: tint.side }, g);
+        el('polygon', { points: pts(right), fill: tint.shade }, g);
+        el('polygon', { points: pts(top), fill: tint.top, 'fill-opacity': '0.96' }, g);
+        el(
+          'polyline',
+          {
+            points: pts([top[3], top[0], top[1]]),
+            fill: 'none',
+            stroke: tint.edge,
+            'stroke-width': 1.2,
+            'stroke-linejoin': 'round',
+          },
+          g,
+        );
+        if (label) {
+          // Leader from the slab's rightmost corner, so each label names its own layer.
+          const [lx, ly] = P(w, y + h * 0.5, 0);
+          el(
+            'line',
+            {
+              x1: lx + 6,
+              y1: ly,
+              x2: lx + 26,
+              y2: ly,
+              stroke: tint.edge,
+              'stroke-width': 1,
+              'stroke-opacity': 0.75,
+            },
+            g,
+          );
+          const t = el(
+            'text',
+            {
+              x: lx + 32,
+              y: ly + 5,
+              fill: '#c9d3e1',
+              'font-family': 'Inter',
+              'font-size': 16,
+              'font-weight': 500,
+            },
+            g,
+          );
+          t.textContent = label;
+        }
+        return g;
+      }
+
+      const TINT = {
+        rt: { top: '#3c3478', side: '#262248', shade: '#1b1835', edge: '#b9a8ff' },
+        exec: { top: '#244a86', side: '#172f57', shade: '#112342', edge: '#9cccff' },
+        plat: { top: '#2c4744', side: '#1c2f2d', shade: '#152422', edge: '#9cc8c0' },
+      };
+      const REGIONS = [
+        ['Class loading', 'rt'],
+        ['Memory', 'rt'],
+        ['Execution engine', 'exec'],
+        ['Garbage collection', 'rt'],
+        ['Native interface', 'rt'],
+        ['Platform: OS and CPU', 'plat'],
+      ];
+
+      /** The mark's stacked layers on a 32-unit grid, shared by the card's mark and the app icons. */
+      function glyph(g) {
+        el('path', { d: 'M7 14.4 16 19.6v8L7 22.4Z', fill: '#4a5466' }, g);
+        el('path', { d: 'M25 14.4 16 19.6v8l9-5.2Z', fill: '#2b313d' }, g);
+        el('path', { d: 'M7 14.4 16 9.2l9 5.2-9 5.2Z', fill: '#171b23' }, g);
+        el('circle', { cx: 16, cy: 16.2, r: 1.8, fill: '#9fd0ff' }, g);
+        el('path', { d: 'M7 8.8 16 3.6l9 5.2-9 5.2Z', fill: '#5c93ec' }, g);
+        el(
+          'path',
+          {
+            d: 'M7 8.8 16 3.6l9 5.2',
+            fill: 'none',
+            stroke: '#cfe2ff',
+            'stroke-width': 0.7,
+            'stroke-linejoin': 'round',
+          },
+          g,
+        );
+      }
+
+      function mark(x, y, size) {
+        const g = el('g', { transform: `translate(${x} ${y}) scale(${size / 32})` });
+        el(
+          'rect',
+          { x: 0.5, y: 0.5, width: 31, height: 31, rx: 7.5, fill: '#0f1218', stroke: '#2a303b' },
+          g,
+        );
+        glyph(g);
+      }
+
+      if (kind === 'og') {
+        const W = 1200,
+          H = 630;
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        const defs = el('defs', {});
+        const grad = el('radialGradient', { id: 'light', cx: '72%', cy: '18%', r: '75%' }, defs);
+        el('stop', { offset: '0', 'stop-color': '#1d2a44' }, grad);
+        el('stop', { offset: '1', 'stop-color': '#07090e' }, grad);
+        el('rect', { width: W, height: H, fill: 'url(#light)' });
+        const grid = el('g', { stroke: '#8aa0c8', 'stroke-opacity': 0.06 });
+        for (let x = 0; x <= W; x += 40) el('line', { x1: x, y1: 0, x2: x, y2: H }, grid);
+        for (let y = 0; y <= H; y += 40) el('line', { x1: 0, y1: y, x2: W, y2: y }, grid);
+
+        // Exploded stack, bottom slab first so upper slabs overlap correctly.
+        const k = 1,
+          ox = 820,
+          base = 530;
+        REGIONS.slice()
+          .reverse()
+          .forEach(([label, family], level) => {
+            slab({
+              w: 196,
+              d: 124,
+              h: 14,
+              y: level * 68,
+              ox,
+              oy: base,
+              k,
+              tint: TINT[family],
+              label,
+            });
+          });
+
+        mark(72, 92, 72);
+        const name = el('text', { x: 72, y: 250, fill: '#f3f1ec', 'font-size': 76 });
+        const a = el(
+          'tspan',
+          { 'font-family': 'Inter', 'font-weight': 650, 'letter-spacing': '-1.2' },
+          name,
+        );
+        a.textContent = 'JVM ';
+        const b = el('tspan', { 'font-family': 'Source Serif', 'font-weight': 400 }, name);
+        b.textContent = 'Atlas';
+        const tag = el('text', {
+          x: 74,
+          y: 304,
+          fill: '#b8c3d3',
+          'font-family': 'Inter',
+          'font-size': 28,
+          'font-weight': 400,
+        });
+        tag.textContent = 'Explore the machine behind Java programs.';
+        const sub = el('text', {
+          x: 74,
+          y: 520,
+          fill: '#7f8ca0',
+          'font-family': 'Inter',
+          'font-size': 18,
+          'font-weight': 450,
+        });
+        sub.textContent = 'Class loading · memory · execution · garbage collection';
+        const sub2 = el('text', {
+          x: 74,
+          y: 548,
+          fill: '#7f8ca0',
+          'font-family': 'Inter',
+          'font-size': 18,
+          'font-weight': 450,
+        });
+        sub2.textContent = 'Explained at three levels, with verified examples and sources.';
+      } else {
+        const size = Number(params.get('size') ?? 512);
+        svg.setAttribute('width', size);
+        svg.setAttribute('height', size);
+        svg.setAttribute('viewBox', '0 0 32 32');
+        // App icons are full-bleed tiles; the platform applies its own mask.
+        el('rect', { width: 32, height: 32, fill: '#0f1218' });
+        glyph(el('g', { transform: 'translate(3.2 3.2) scale(0.8)' }));
+      }
+      document.fonts.ready.then(() => {
+        document.body.dataset.ready = '1';
+      });
+    </script>
+  </body>
+</html>

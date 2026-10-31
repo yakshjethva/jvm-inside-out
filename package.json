@@ -1,8 +1,8 @@
 {
-  "name": "inside-java",
+  "name": "jvm-atlas",
   "private": true,
   "version": "0.2.0",
-  "description": "Inside Java: understand Java from the inside out. An open-source, interactive atlas of JVM internals.",
+  "description": "JVM Atlas: explore the machine behind Java programs. An independent, interactive atlas of the Java Virtual Machine.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-server && node scripts/prerender.mjs && node scripts/verify-build.mjs",
+    "verify:build": "node scripts/verify-build.mjs",
     "preview": "vite preview",
     "preview:pages": "node scripts/serve-pages.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
@@ -25,12 +26,14 @@
     "@fontsource-variable/inter": "5.3.0",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource-variable/source-serif-4": "5.3.1",
+    "@react-three/fiber": "9.8.2",
     "lucide-react": "1.65.0",
     "motion": "14.9.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-router": "8.5.1",
-    "shiki": "4.5.0"
+    "shiki": "4.5.0",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
@@ -43,7 +46,9 @@
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
     "@vitejs/plugin-react": "6.1.2",
+    "axe-core": "4.14.0",
     "eslint": "9.39.5",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react-hooks": "7.1.1",

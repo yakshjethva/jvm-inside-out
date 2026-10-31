@@ -46,7 +46,14 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Build (base path ${{ env.BASE_PATH }})
+      # The canonical site (Vercel) is served from the root. Its build writes the
+      # sitemap and robots.txt; verify-build checks every prerendered page.
+      - name: Build for the site root and check the prerendered pages
+        run: npm run build
+        env:
+          BASE_PATH: /
+
+      - name: Build (base path ${{ env.BASE_PATH }}) and check the prerendered pages
         run: npm run build
 
       - name: Install the Playwright browser

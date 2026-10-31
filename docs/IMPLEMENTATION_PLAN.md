@@ -1,6 +1,6 @@
-# Inside Java — implementation plan
+# JVM Atlas — implementation plan
 
-> Understand Java from the inside out.
+> Explore the machine behind Java programs.
 
 This is the working plan for the project. It is short on purpose: it records the decisions that shape
 the code base, the milestone order, and what "done" means for each milestone. Update it when a
@@ -13,20 +13,24 @@ The repository started with only an MIT `LICENSE` and a one-line `README.md`. Ev
 
 ## 1. Product architecture
 
-Inside Java is a **static single-page application**. There is no server, database, account system or
-external API. Everything the learner sees is compiled into the bundle and served by GitHub Pages.
+JVM Atlas is a **static single-page application**, prerendered to HTML for every public route.
+There is no server, database, account system or external API. Everything the learner sees is
+compiled into static files, served from one commit by two hosts: Vercel serves the canonical site
+from the root of `https://jvmatlas.vercel.app`, and GitHub Pages serves a mirror on the project
+subpath (section 7).
 
 ```
 ┌──────────────────────────── browser ────────────────────────────┐
 │  UI & navigation      React Router pages, layout, preferences    │
-│  Visualization        custom SVG anatomy, pan/zoom, inspector    │
+│  Visualization        SVG anatomy, 3D model, inspector           │
 │  Simulation           pure TypeScript step models (no DOM)       │
 │  Content              typed TS data: components, relationships,  │
 │                       glossary, references, scenarios, quizzes   │
 │  Persistence          localStorage (progress, bookmarks, prefs)  │
 └──────────────────────────────────────────────────────────────────┘
-          ▲ static files only (HTML, JS, CSS, fonts, SVG)
-   GitHub Actions ──build──▶ GitHub Pages (project subpath)
+          ▲ static files only (HTML, JS, CSS, fonts, SVG, PNG)
+   Vercel ─────────build──▶ jvmatlas.vercel.app (canonical, site root)
+   GitHub Actions ─build──▶ GitHub Pages (mirror, project subpath)
 ```
 
 The four layers are kept separate so contributors can change one without touching the others:
@@ -40,27 +44,29 @@ The four layers are kept separate so contributors can change one without touchin
 
 ## 2. Sitemap
 
-| Route            | Page (navigation label)   | Milestone | Status in this release                  |
-| ---------------- | ------------------------- | --------- | --------------------------------------- |
-| `/`              | Home                      | M1, LX    | Built (journey machine, beginner path)  |
-| `/start`         | Start here                | LX        | Built (7 chapters and a recap)          |
-| `/paths`         | Learn                     | M1, LX    | Built (question-led, roadmap is honest) |
-| `/anatomy`       | Explore the JVM           | M2, LX    | Built (overview of six parts, 4 views)  |
-| `/glossary`      | Glossary                  | M1/M2     | Built                                   |
-| `/references`    | References (under More)   | M1/M2     | Built                                   |
-| `/about`         | About (under More)        | M1        | Built (includes project status)         |
-| `/contributing`  | Contributing (under More) | M1        | Built                                   |
-| `/class-loading` | Class Loader Explorer     | M3        | Not routed yet                          |
-| `/memory`        | Runtime Memory Explorer   | M4        | Not routed yet                          |
-| `/execution`     | Execution Engine Explorer | M5        | Not routed yet                          |
-| `/bytecode`      | Bytecode Explorer         | M5        | Not routed yet                          |
-| `/gc`            | Garbage Collection Lab    | M6        | Not routed yet                          |
-| `/concurrency`   | Concurrency Lab           | M7        | Not routed yet                          |
-| `/collections`   | Collections Explorer      | M7        | Not routed yet                          |
+| Route            | Page (navigation label)   | Milestone  | Status in this release                                      |
+| ---------------- | ------------------------- | ---------- | ----------------------------------------------------------- |
+| `/`              | Home                      | M1, LX, JA | Built (atlas hero, eight sections)                          |
+| `/start`         | Start here                | LX         | Built (7 chapters and a recap)                              |
+| `/learn`         | Learn                     | M1, LX, JA | Built (guides and question-led paths; `/paths` still works) |
+| `/learn/:slug`   | Guides                    | JA         | Built (ten guides)                                          |
+| `/anatomy`       | Explore anatomy           | M2, LX, JA | Built (2D map, 3D model, list; 4 views)                     |
+| `/glossary`      | Glossary                  | M1/M2      | Built                                                       |
+| `/references`    | References                | M1/M2      | Built                                                       |
+| `/about`         | About                     | M1         | Built (includes project status)                             |
+| `/contributing`  | Contributing (footer)     | M1         | Built                                                       |
+| `/class-loading` | Class Loader Explorer     | M3         | Not routed yet                                              |
+| `/memory`        | Runtime Memory Explorer   | M4         | Not routed yet                                              |
+| `/execution`     | Execution Engine Explorer | M5         | Not routed yet                                              |
+| `/bytecode`      | Bytecode Explorer         | M5         | Not routed yet                                              |
+| `/gc`            | Garbage Collection Lab    | M6         | Not routed yet                                              |
+| `/concurrency`   | Concurrency Lab           | M7         | Not routed yet                                              |
+| `/collections`   | Collections Explorer      | M7         | Not routed yet                                              |
 
-LX is the learning-experience redesign (see [`LEARNING_EXPERIENCE.md`](LEARNING_EXPERIENCE.md)).
-The header shows Start here, Learn, Explore the JVM and Glossary, with References, About,
-Contributing and Project status under More; mobile shows the same items in the same order.
+LX is the learning-experience redesign (see [`LEARNING_EXPERIENCE.md`](LEARNING_EXPERIENCE.md));
+JA is the JVM Atlas release (rebrand, prerendering, guides, 3D anatomy). The header shows Start
+here, Explore anatomy, Learn, Glossary, References and About; Contributing and Project status are
+in the footer and the mobile menu.
 
 Pages that are not built are **not linked**. The Learn page and About → Project status list them
 as "in development" with their milestone, as plain text. No dead navigation, no empty pages.
@@ -255,21 +261,30 @@ Layout coordinates live beside the visualization (`src/modules/jvm/layout.ts`), 
 | 11  | README covers local development and deployment   | M1                                                             |
 | 12  | No critical navigation or interaction is broken  | Every milestone                                                |
 
-## 7. GitHub Pages deployment plan
+## 7. Deployment plan
+
+The canonical site is on Vercel at `https://jvmatlas.vercel.app` (root path); GitHub Pages serves a
+mirror at `/jvm-inside-out/`. Both come from the same commit. See
+[`SEO_AND_DEPLOYMENT.md`](SEO_AND_DEPLOYMENT.md) for the details.
 
 1. `vite.config.ts` reads `BASE_PATH` (default `/`). CI sets it to `/<repository-name>/`, or to the
-   `PAGES_BASE_PATH` repository variable when a custom domain is used.
+   `PAGES_BASE_PATH` repository variable when a custom domain is used. Vercel builds for `/`.
 2. The router uses `import.meta.env.BASE_URL` as its basename. No root-relative asset paths in code.
-3. A small build plugin writes `404.html` and a copy of `index.html` for every top-level route
-   (`/anatomy/index.html`, …) so deep links return HTTP 200 and unknown paths still boot the app.
-   It also writes `sw.js` with the list of files to precache.
-4. `.github/workflows/deploy.yml`: checkout → `npm ci` → type-check → lint → unit tests → build →
-   Playwright tests against the built subpath → upload Pages artifact → deploy (on `main` only;
-   pull requests run everything except deployment).
-5. One-time setup by the repository owner: **Settings → Pages → Source: GitHub Actions**.
+3. `npm run build` runs the client build (which writes `sw.js` with the precache list), the SSR
+   build and `scripts/prerender.mjs`, which writes every public route as real HTML, `404.html`
+   and, for the root build, `sitemap.xml` and `robots.txt`; `scripts/verify-build.mjs` then checks
+   the output, Three.js isolation and the script budgets.
+4. `.github/workflows/deploy.yml`: checkout → `npm ci` → type-check → lint → unit tests → root
+   build → Pages build → Playwright tests against the built subpath → upload Pages artifact →
+   deploy (on `main` only; pull requests run everything except deployment). `vercel.json` sets the
+   Vercel build command, output directory and headers.
+5. One-time setup by the repository owner: **Settings → Pages → Source: GitHub Actions**, and the
+   Vercel project connected to the repository.
 
-Deployment cannot be verified from a pull request. It is verified when the workflow runs on `main`
-and the site responds at `https://<owner>.github.io/<repository>/`.
+Production deployment cannot be verified from a pull request: a pull request gets a Vercel preview
+deployment and runs every CI step except the Pages deployment. Production is verified when the
+workflows run on `main` and the sites respond at `https://jvmatlas.vercel.app` and
+`https://<owner>.github.io/<repository>/`.
 
 ## 8. Project structure
 

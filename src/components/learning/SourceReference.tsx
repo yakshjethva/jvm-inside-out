@@ -33,7 +33,7 @@ export function SourceReference({ citation }: { citation: Citation }) {
           href={ref.url}
           target="_blank"
           rel="noreferrer noopener"
-          className="group inline-flex items-baseline gap-1 font-medium text-fg hover:text-exec-200"
+          className="group inline-flex min-h-6 items-center gap-1 font-medium text-fg hover:text-exec-200"
         >
           <span className="break-words">{ref.title}</span>
           <ExternalLink
@@ -44,7 +44,7 @@ export function SourceReference({ citation }: { citation: Citation }) {
           <span className="sr-only">(opens in a new tab)</span>
         </a>
         <p className="text-fg-subtle">
-          {citation.note ?? ref.description} <span className="text-ink-400">· {ref.version}</span>
+          {citation.note ?? ref.description} <span className="text-fg-subtle">· {ref.version}</span>
         </p>
       </div>
     </li>

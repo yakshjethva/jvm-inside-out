@@ -1,6 +1,13 @@
 import { Link } from 'react-router';
-import { MORE_NAV, PRIMARY_NAV, SITE } from '@/data/site';
-import { LogoMark } from './Logo';
+import { PRIMARY_NAV, PROJECT_NAV, SITE } from '@/data/site';
+import { LogoMark, Wordmark } from './Logo';
+
+const REFERENCE_PAGES = ['/references', '/about'];
+const LEARN_LINKS = PRIMARY_NAV.filter((item) => !REFERENCE_PAGES.includes(item.to));
+const PROJECT_LINKS = [
+  ...PRIMARY_NAV.filter((item) => REFERENCE_PAGES.includes(item.to)),
+  ...PROJECT_NAV,
+];
 
 export function SiteFooter() {
   return (
@@ -9,22 +16,24 @@ export function SiteFooter() {
         <div>
           <div className="flex items-center gap-2.5">
             <LogoMark size={22} />
-            <span className="font-serif text-lg text-fg">Inside Java</span>
+            <Wordmark className="text-[17px] text-fg" />
           </div>
           <p className="mt-2 max-w-md text-[13.5px] text-fg-muted">
-            {SITE.tagline} A free, open-source way to see what happens inside Java programs.
-            Specification baseline: {SITE.specVersion}. Implementation details:{' '}
-            {SITE.implementationVersion}.
+            {SITE.tagline} A free, open-source atlas of the Java Virtual Machine. Specification
+            baseline: {SITE.specVersion}. Implementation details: {SITE.implementationVersion}.
           </p>
           <p className="mt-3 text-[12.5px] text-fg-subtle">
             MIT licensed · no accounts, no tracking, no backend · your progress stays in your
             browser.
           </p>
+          <p className="mt-3 max-w-md text-[12px] text-fg-subtle">
+            {SITE.independence} {SITE.trademarks}
+          </p>
         </div>
         <nav aria-label="Footer: learn">
           <p className="text-[13px] font-medium text-fg">Learn</p>
           <ul className="mt-2 space-y-1.5 text-[13.5px]">
-            {PRIMARY_NAV.map((item) => (
+            {LEARN_LINKS.map((item) => (
               <li key={item.to}>
                 <Link to={item.to} className="text-fg-muted hover:text-fg">
                   {item.label}
@@ -36,7 +45,7 @@ export function SiteFooter() {
         <nav aria-label="Footer: project">
           <p className="text-[13px] font-medium text-fg">Project</p>
           <ul className="mt-2 space-y-1.5 text-[13.5px]">
-            {MORE_NAV.map((item) => (
+            {PROJECT_LINKS.map((item) => (
               <li key={item.to}>
                 <Link to={item.to} className="text-fg-muted hover:text-fg">
                   {item.label}

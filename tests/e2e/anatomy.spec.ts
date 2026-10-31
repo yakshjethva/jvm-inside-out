@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const inspector = (page: Page) => page.getByRole('complementary', { name: 'Component inspector' });
 const plateNode = (page: Page, name: string) =>
@@ -240,7 +241,9 @@ test.describe('JVM explorer: expert tools', () => {
     const preview = page.getByRole('group', { name: 'Interactive preview of the JVM anatomy' });
     // The preview mounts only as its section comes near the viewport.
     await expect(preview).toHaveCount(0);
-    await page.getByRole('heading', { name: 'Already write Java?' }).scrollIntoViewIfNeeded();
+    await page
+      .getByRole('heading', { name: 'The whole machine on one plate' })
+      .scrollIntoViewIfNeeded();
     await preview.getByRole('button', { name: /^Interpreter, / }).click();
     await page.getByRole('link', { name: 'Open in the explorer' }).click();
     await expect(page).toHaveURL(/\/anatomy\/?\?c=interpreter$/);

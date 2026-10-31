@@ -67,3 +67,22 @@ export const REGION_IDS = JVM_REGIONS.map((region) => region.id);
 
 export const regionOf = (id: ComponentId): JvmRegion | undefined =>
   JVM_REGIONS.find((region) => region.id === id);
+
+/**
+ * Where a program's class files come from. Not part of the JVM: drawn with the
+ * platform's dotted line wherever it appears.
+ */
+export const BUILD_AREA: JvmRegion = {
+  id: 'build-time',
+  title: 'Build time',
+  blurb: 'Compiles source code into class files.',
+  role: 'Before the JVM starts, a compiler turns source files into .class files that hold bytecode: javac for Java (other JVM languages have their own compilers).',
+  family: 'plat',
+};
+
+/**
+ * The seven areas of the atlas, in the order a program meets them: build time,
+ * the five regions of the JVM, and the platform it runs on. Used by the home
+ * page's machine drawing and the 3D anatomy.
+ */
+export const ATLAS_AREAS: JvmRegion[] = [BUILD_AREA, ...JVM_REGIONS];
