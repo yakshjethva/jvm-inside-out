@@ -6,12 +6,14 @@ import {
   ChevronDown,
   ChevronRight,
   CircleCheck,
+  FlaskConical,
   Microscope,
   Play,
   TriangleAlert,
   X,
 } from 'lucide-react';
 import { useId, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { CodeBlock } from '@/components/code/CodeBlock';
 import { AccuracyNote } from '@/components/learning/AccuracyNote';
 import { KnowledgeCheck } from '@/components/learning/KnowledgeCheck';
@@ -20,6 +22,8 @@ import { LevelText } from '@/components/learning/LevelText';
 import { InlineRichText, RichText } from '@/components/learning/RichText';
 import { SourceList } from '@/components/learning/SourceReference';
 import { Badge } from '@/components/ui/Badge';
+import { isAncestor, type ComponentId } from '@/content/jvm';
+import { LAB_FOR_REGION } from '@/data/site';
 import { EDGE_STYLES } from '@/components/diagrams/edgeStyles';
 import type { ExplanationLevel } from '@/hooks/useLearningState';
 import { cn } from '@/lib/cn';
@@ -512,7 +516,12 @@ function SeeItWorking({
 }) {
   const [open, setOpen] = useState(false);
   const demo = doc.demo && renderDemo ? doc.demo : null;
-  if (!demo && !showExample && !walkthrough && !onDissect) return null;
+  // The laboratory for the region this part belongs to, if there is one.
+  const region = Object.keys(LAB_FOR_REGION).find(
+    (id) => id === doc.id || isAncestor(id as ComponentId, doc.id),
+  );
+  const lab = region ? LAB_FOR_REGION[region] : undefined;
+  if (!demo && !showExample && !walkthrough && !onDissect && !lab) return null;
 
   return (
     <Section title="See it working">
@@ -539,7 +548,7 @@ function SeeItWorking({
           verifiedWith={doc.example.verifiedWith}
         />
       )}
-      {(walkthrough || onDissect) && (
+      {(walkthrough || onDissect || lab) && (
         <div className={cn('flex flex-wrap gap-2', (demo || showExample) && 'mt-3')}>
           {walkthrough && (
             <button
@@ -561,6 +570,17 @@ function SeeItWorking({
             >
               <Microscope size={13} aria-hidden className="text-rt-300" /> Look inside it
             </button>
+          )}
+          {lab && (
+            <Link
+              to={lab.to}
+              className="inline-flex min-h-9 items-center gap-2 rounded-md border border-ink-600 px-3 py-1.5 text-[13px] text-fg-muted hover:border-exec-400 hover:text-fg"
+            >
+              <FlaskConical size={13} aria-hidden className="shrink-0 text-exec-300" />
+              <span>
+                Explore it in the <span className="text-fg">{lab.label.toLowerCase()}</span>
+              </span>
+            </Link>
           )}
         </div>
       )}

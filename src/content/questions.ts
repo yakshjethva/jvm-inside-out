@@ -9,7 +9,7 @@ export interface QuestionPath {
   /** What answering it involves, in one or two plain sentences. */
   summary: string;
   /** Places that answer it today. */
-  now: { label: string; to: string; kind: 'lesson' | 'map' | 'walkthrough' | 'inside' }[];
+  now: { label: string; to: string; kind: 'lesson' | 'map' | 'walkthrough' | 'inside' | 'lab' }[];
   /** A dedicated laboratory that is planned. */
   later?: { label: string; milestone: string };
 }
@@ -37,8 +37,12 @@ export const QUESTION_PATHS: QuestionPath[] = [
         kind: 'inside',
       },
       { label: 'The heap on the map', to: '/anatomy?c=heap', kind: 'map' },
+      {
+        label: 'The memory laboratory: stack and heap, statement by statement',
+        to: '/memory?lab=living',
+        kind: 'lab',
+      },
     ],
-    later: { label: 'Memory Lab: step through your own code', milestone: 'M4' },
   },
   {
     id: 'loading',
@@ -61,8 +65,12 @@ export const QUESTION_PATHS: QuestionPath[] = [
         to: '/anatomy?c=class-loader-subsystem',
         kind: 'map',
       },
+      {
+        label: 'The class loader explorer: follow a request through the loaders',
+        to: '/class-loading?lab=delegation',
+        kind: 'lab',
+      },
     ],
-    later: { label: 'Class Loader Explorer: a delegation simulator', milestone: 'M3' },
   },
   {
     id: 'speed',

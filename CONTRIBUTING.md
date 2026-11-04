@@ -44,28 +44,31 @@ npm run test:e2e
 
 ## Where things live
 
-| Path                                      | Contents                                                         |
-| ----------------------------------------- | ---------------------------------------------------------------- |
-| `src/content/jvm/components/*.ts`         | One entry per anatomy component: explanations, example, sources  |
-| `src/content/jvm/teaching.ts`             | The teaching layer of the core concepts (levels, analogy, check) |
-| `src/content/jvm/regions.ts`              | The six main parts of the explorer overview, and the seven areas |
-| `src/content/topics.ts`                   | The guides at `/learn/<slug>`, composed from existing content    |
-| `src/seo/pages.ts`                        | Every public route's title and description (prerender, sitemap)  |
-| `src/content/lesson/firstRun.ts`          | The Start here lesson: chapters, predictions, listings, quiz     |
-| `src/modules/lesson/exhibits/`            | The lesson's interactive exhibits (reused by the inspector)      |
-| `src/simulators/`                         | Pure models behind the exhibits, with unit tests                 |
-| `src/content/jvm/ids.ts`                  | The list of component ids                                        |
-| `src/content/jvm/relationships.ts`        | Connectors between components                                    |
-| `src/content/jvm/scenarios.ts`            | Execution walkthroughs, step by step                             |
-| `src/content/jvm/quiz.ts`                 | The anatomy knowledge check                                      |
-| `src/content/paths.ts`                    | The curriculum by subject (Learn page)                           |
-| `src/content/questions.ts`                | The question-led paths (Learn page)                              |
-| `src/glossary/terms.ts`                   | Glossary entries                                                 |
-| `src/data/references.ts`                  | The source registry                                              |
-| `src/modules/jvm/layout.ts`               | Plate coordinates and connector routes (kept apart from content) |
-| `src/modules/anatomy-3d/data/layout3d.ts` | 3D positions derived from the plate (a teaching layout)          |
-| `src/modules/jvm/internals/plates/`       | Hand-drawn dissections for Internal mode                         |
-| `tests/unit/content-integrity.test.tsx`   | Checks every id, link, citation, route and layout constraint     |
+| Path                                      | Contents                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `src/content/jvm/components/*.ts`         | One entry per anatomy component: explanations, example, sources   |
+| `src/content/jvm/teaching.ts`             | The teaching layer of the core concepts (levels, analogy, check)  |
+| `src/content/jvm/regions.ts`              | The six main parts of the explorer overview, and the seven areas  |
+| `src/content/topics.ts`                   | The guides at `/learn/<slug>`, composed from existing content     |
+| `src/seo/pages.ts`                        | Every public route's title and description (prerender, sitemap)   |
+| `src/content/lesson/firstRun.ts`          | The Start here lesson: chapters, predictions, listings, quiz      |
+| `src/modules/lesson/exhibits/`            | The lesson's interactive exhibits (reused by the inspector)       |
+| `src/content/labs/`                       | The laboratories: stations, experiments, programs, quizzes        |
+| `src/content/labs/*Evidence.ts`           | Their verified listings: real output, logs and `jcmd` reports     |
+| `src/modules/class-loading/`, `memory/`   | The laboratories' stations; `src/modules/lab-3d/` their 3D models |
+| `src/simulators/`                         | Pure models behind the exhibits, with unit tests                  |
+| `src/content/jvm/ids.ts`                  | The list of component ids                                         |
+| `src/content/jvm/relationships.ts`        | Connectors between components                                     |
+| `src/content/jvm/scenarios.ts`            | Execution walkthroughs, step by step                              |
+| `src/content/jvm/quiz.ts`                 | The anatomy knowledge check                                       |
+| `src/content/paths.ts`                    | The curriculum by subject (Learn page)                            |
+| `src/content/questions.ts`                | The question-led paths (Learn page)                               |
+| `src/glossary/terms.ts`                   | Glossary entries                                                  |
+| `src/data/references.ts`                  | The source registry                                               |
+| `src/modules/jvm/layout.ts`               | Plate coordinates and connector routes (kept apart from content)  |
+| `src/modules/anatomy-3d/data/layout3d.ts` | 3D positions derived from the plate (a teaching layout)           |
+| `src/modules/jvm/internals/plates/`       | Hand-drawn dissections for Internal mode                          |
+| `tests/unit/content-integrity.test.tsx`   | Checks every id, link, citation, route and layout constraint      |
 
 ### Writing text
 
@@ -107,6 +110,15 @@ Every interactive teaches cause and effect: the learner does something, the visu
 a caption says what changed and why. Sequences can be restarted, stepped backwards and forwards,
 and paused. Put the logic in a pure function in `src/simulators` and write its unit tests first.
 If the visual simplifies anything, its accuracy note says what.
+
+### Laboratory evidence
+
+Every listing in a laboratory comes from a real run: a program you compiled and ran on the JDK
+version the listing names, with the exact command in its title and anything left out or varying
+(hash codes, addresses, timestamps) said in `verifiedWith`. When a simulator models that run,
+add a test in `tests/unit/labs.test.ts` or `memory-content.test.ts` that replays the program and
+compares it with the listing line by line; for an object layout, the bands must add up to the
+measured size. Never edit output by hand.
 
 ### Adding a component
 

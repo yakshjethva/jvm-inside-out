@@ -97,6 +97,23 @@ describe('progress migration', () => {
     expect(Object.keys(state.lessons['first-run']!)).toEqual(['compiler', 'memory']);
     expect('heap' in state.understood).toBe(true);
   });
+
+  it('keeps laboratory stations in the same record, so labs needed no migration', () => {
+    progressStore.reset();
+    progressActions.completeChapter('first-run', 'compiler');
+    progressActions.completeChapter('lab:class-loading', 'observatory');
+    progressActions.completeChapter('lab:memory', 'living');
+    const saved = JSON.parse(localStorage.getItem(storageKey('progress'))!);
+    // Data saved before the laboratories existed is still valid as it is.
+    expect(migrateProgress(savedByM2)).toEqual({ ...savedByM2, lessons: {} });
+    expect(isProgress(saved)).toBe(true);
+    expect(Object.keys(saved.lessons).sort()).toEqual([
+      'first-run',
+      'lab:class-loading',
+      'lab:memory',
+    ]);
+    expect(Object.keys(saved.lessons['lab:memory'])).toEqual(['living']);
+  });
 });
 
 describe('preference actions', () => {

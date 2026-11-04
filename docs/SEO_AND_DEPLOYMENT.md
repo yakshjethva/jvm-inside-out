@@ -18,12 +18,12 @@ becomes two deployments. Read this before adding a page, changing metadata or to
 
 `npm run build` runs four steps:
 
-| Step | Command                                                      | Output                                                                                                                                                                                                                                                                                                         |
-| ---- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | `vite build`                                                 | `dist/`: the client app, `index.html` template, `sw.js`                                                                                                                                                                                                                                                        |
-| 2    | `vite build --ssr src/entry-server.tsx --outDir dist-server` | `dist-server/entry-server.js`: renders a route to HTML (not deployed)                                                                                                                                                                                                                                          |
-| 3    | `node scripts/prerender.mjs`                                 | `dist/<route>/index.html` for every public route, `404.html`, and on root builds `sitemap.xml` and `robots.txt`                                                                                                                                                                                                |
-| 4    | `node scripts/verify-build.mjs`                              | Fails the build if any page lacks its title, description, single `h1`, canonical URL, JSON-LD or content, if a link points at a missing page, if a URL escapes the base path, if Three.js reaches the first-load scripts, the anatomy page or the service worker's precache, or if a script budget is exceeded |
+| Step | Command                                                      | Output                                                                                                                                                                                                                                                                                                              |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `vite build`                                                 | `dist/`: the client app, `index.html` template, `sw.js`                                                                                                                                                                                                                                                             |
+| 2    | `vite build --ssr src/entry-server.tsx --outDir dist-server` | `dist-server/entry-server.js`: renders a route to HTML (not deployed)                                                                                                                                                                                                                                               |
+| 3    | `node scripts/prerender.mjs`                                 | `dist/<route>/index.html` for every public route, `404.html`, and on root builds `sitemap.xml` and `robots.txt`                                                                                                                                                                                                     |
+| 4    | `node scripts/verify-build.mjs`                              | Fails the build if any page lacks its title, description, single `h1`, canonical URL, JSON-LD or content, if a link points at a missing page, if a URL escapes the base path, if Three.js reaches the first-load scripts, a page with a 3D view or the service worker's precache, or if a script budget is exceeded |
 
 `src/entry-server.tsx` renders with React Router's static handler and `react-dom/static`
 `prerender`, so the HTML is exactly what the app renders for that URL. Each page carries the
@@ -74,10 +74,20 @@ Targets are LCP ≤ 2.5 s, CLS ≤ 0.1 and INP ≤ 200 ms. INP needs real intera
 measured here; TBT is its lab proxy, and hydration of the explorer and the guides is the largest
 remaining cost on slow devices. The glossary's mobile LCP (2.56 s) is just above the target.
 
-Script budgets (gzip), enforced by `verify-build`: initial scripts 125 kB (112.1 kB now), 3D chunk
-275 kB (253.3 kB now). Other pages are prefetched one at a time after load, never with Save-Data
-or on 2G; the service worker precaches every bundle except the 3D viewer, which is cached the
-first time a reader opens it.
+The two laboratories (`/class-loading`, `/memory`) were added after these runs, and Lighthouse
+is not installed in the environment they were built in, so their LCP and TBT have not been
+measured under Lighthouse's throttling. Their layout stability was measured in Playwright 1.63's
+Chromium (a `PerformanceObserver` for `layout-shift`, buffered) against the GitHub Pages build
+served by `scripts/serve-pages.mjs` with gzip, without throttling, three runs per page, desktop
+1440 × 900 and Pixel 7: CLS was at most 0.001 on `/class-loading` and `/memory`, 0.000 on
+`/class-loading?lab=delegation&exp=sql&step=3` and `/memory?lab=living&step=7`, and at most
+0.0005 for a returning learner whose first station opens after hydration.
+
+Script budgets (gzip), enforced by `verify-build`: initial scripts 125 kB (113.9 kB now); opening
+a 3D view 275 kB (everything it downloads beyond its page: the anatomy 254.0 kB, the class
+loaders 256.9 kB, memory 255.4 kB now). Other pages are prefetched one at a time after load, never
+with Save-Data or on 2G; the service worker precaches every bundle except the 3D viewers' chunks,
+which are cached the first time a reader opens a 3D view.
 
 ## Metadata
 

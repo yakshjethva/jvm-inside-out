@@ -1,7 +1,7 @@
-import { Menu, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Menu, X } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
-import { PRIMARY_NAV, PROJECT_NAV, SITE } from '@/data/site';
+import { LABS_NAV, PRIMARY_NAV, PROJECT_NAV, SITE } from '@/data/site';
 import { cn } from '@/lib/cn';
 import { LogoMark, Wordmark } from './Logo';
 import { SettingsMenu } from './SettingsMenu';
@@ -40,18 +40,22 @@ export function SiteHeader() {
 
         <nav aria-label="Primary" className="ml-4 hidden items-center gap-0.5 lg:flex">
           {PRIMARY_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-md px-3 py-1.5 text-[14px] transition-colors',
-                  isActive ? 'bg-ink-750 text-fg' : 'text-fg-muted hover:bg-ink-800 hover:text-fg',
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
+            <span key={item.to} className="contents">
+              <NavLink
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    'rounded-md px-3 py-1.5 text-[14px] transition-colors',
+                    isActive
+                      ? 'bg-ink-750 text-fg'
+                      : 'text-fg-muted hover:bg-ink-800 hover:text-fg',
+                  )
+                }
+              >
+                {item.label}
+              </NavLink>
+              {item.to === '/anatomy' && <LabsMenu />}
+            </span>
           ))}
         </nav>
 
@@ -95,6 +99,14 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+          <p className="mt-4 text-[12.5px] text-fg-subtle">Laboratories</p>
+          <ul className="divide-y divide-ink-700">
+            {LABS_NAV.map((item) => (
+              <li key={item.to}>
+                <MobileLink to={item.to} label={item.label} description={item.description} />
+              </li>
+            ))}
+          </ul>
           <p className="mt-4 text-[12.5px] text-fg-subtle">The project</p>
           <ul className="divide-y divide-ink-700">
             {PROJECT_NAV.map((item) => (
@@ -116,6 +128,94 @@ export function SiteHeader() {
         </nav>
       )}
     </header>
+  );
+}
+
+/**
+ * The laboratories, one menu in the desktop header: a disclosure button and a
+ * short list of links. Escape closes it and returns focus to the button; so
+ * do a click outside and moving focus away.
+ */
+function LabsMenu() {
+  const location = useLocation();
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === location.pathname + location.search;
+  const button = useRef<HTMLButtonElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const listId = useId();
+  // The pages may be served with a trailing slash (GitHub Pages redirects to one).
+  const page = location.pathname.replace(/\/+$/, '');
+  const active = LABS_NAV.some((item) => page === item.to);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpenOn(null);
+      button.current?.focus();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpenOn(null);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={box}
+      className="relative"
+      onBlur={(event) => {
+        if (!box.current?.contains(event.relatedTarget as Node | null)) setOpenOn(null);
+      }}
+    >
+      <button
+        ref={button}
+        type="button"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpenOn(open ? null : location.pathname + location.search)}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[14px] transition-colors',
+          active ? 'bg-ink-750 text-fg' : 'text-fg-muted hover:bg-ink-800 hover:text-fg',
+        )}
+      >
+        Labs
+        <ChevronDown
+          size={14}
+          aria-hidden
+          className={cn('transition-transform', open && 'rotate-180')}
+        />
+      </button>
+      {open && (
+        <ul
+          id={listId}
+          className="absolute top-full left-0 z-50 mt-1 w-80 rounded-lg border border-ink-600 bg-raised p-1.5 shadow-overlay"
+        >
+          {LABS_NAV.map((item) => (
+            <li key={item.to}>
+              <NavLink
+                to={item.to}
+                onClick={() => setOpenOn(null)}
+                className={({ isActive }) =>
+                  cn(
+                    'block rounded-md px-3 py-2 hover:bg-ink-850',
+                    isActive ? 'text-fg' : 'text-fg-muted',
+                  )
+                }
+              >
+                <span className="block text-[14.5px] text-fg">{item.label}</span>
+                <span className="block text-[12.5px] text-fg-subtle">{item.description}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

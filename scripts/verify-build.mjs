@@ -9,8 +9,10 @@
  * - asset and link URLs stay under the build's base path, and links inside the
  *   prerendered content point at pages that exist;
  * - sitemap.xml and robots.txt exist only in builds served from the site root;
- * - Three.js is not in the scripts a page loads first, nor in the anatomy
- *   page's, and the script budgets below hold.
+ * - Three.js is not in the scripts a page loads first, nor in the scripts of
+ *   the pages with a 3D view: it is reachable only through the lazy 3D viewers,
+ *   which the service worker does not precache, and the script budgets below
+ *   hold.
  *
  * Exits with status 1 and a list of problems if any check fails.
  */
@@ -171,7 +173,10 @@ for (const file of ['sw.js', 'favicon.svg', 'site.webmanifest', 'og/jvm-atlas.pn
 
 /**
  * Script budgets in gzip bytes. Raise one only with a reason recorded in the
- * pull request (docs/3D_EXPERIENCE.md lists the current sizes).
+ * pull request (docs/3D_EXPERIENCE.md lists the current sizes). `threeChunk`
+ * applies to everything opening a 3D view downloads beyond its page: the
+ * chunk with Three.js and Fiber, the scene code the viewers share and the
+ * viewer itself.
  */
 const BUDGETS = { initialScripts: 125_000, threeChunk: 275_000 };
 const assets = path.join(dist, 'assets');
@@ -216,19 +221,60 @@ if (initial.some(hasThree)) fail('initial scripts', 'include Three.js');
 if (initialBytes > BUDGETS.initialScripts)
   fail('initial scripts', `${initialBytes} bytes gzip, budget ${BUDGETS.initialScripts}`);
 
-const anatomyPage = fs.readdirSync(assets).find((file) => /^JvmAnatomyPage-.*\.js$/.test(file));
-if (!anatomyPage) fail('assets', 'no JvmAnatomyPage chunk');
-else if (closure([anatomyPage]).some(hasThree))
-  fail(anatomyPage, 'the anatomy page loads Three.js before the 3D viewer is chosen');
+/** Lazy chunks: `import("./chunk.js")` anywhere in a script. */
+const dynamicImports = (file) =>
+  [
+    ...fs
+      .readFileSync(path.join(assets, file), 'utf8')
+      .matchAll(/\bimport\(\s*[`"']\.\/([^`"']+?\.js)[`"']\s*\)/g),
+  ].map((match) => match[1]);
+const scripts = fs.readdirSync(assets).filter((file) => file.endsWith('.js'));
+const lazyChunks = [...new Set(scripts.flatMap(dynamicImports))];
+/** The 3D viewers: lazy chunks whose static imports include Three.js. */
+const viewers = lazyChunks.filter((file) => closure([file]).some(hasThree));
+/** Everything the site can load without opening a 3D view. */
+const withoutViewers = new Set(
+  closure([...initial, ...lazyChunks.filter((file) => !viewers.includes(file))]),
+);
 
-const threeChunks = fs.readdirSync(assets).filter((file) => file.endsWith('.js') && hasThree(file));
-if (threeChunks.length === 0) fail('assets', 'no chunk contains the 3D renderer');
-for (const file of threeChunks)
-  if (gzipSize(file) > BUDGETS.threeChunk)
-    fail(file, `${gzipSize(file)} bytes gzip, budget ${BUDGETS.threeChunk}`);
-// Readers who never open the 3D viewer never download it, offline caching included.
+/** Each page with a 3D view, and the viewer it downloads only when a reader chooses it. */
+const VIEWERS = [
+  ['JvmAnatomyPage', 'Anatomy3D'],
+  ['ClassLoadingPage', 'LoaderObservatory3D'],
+  ['MemoryPage', 'MemoryObservatory3D'],
+];
+const chunkNamed = (name) =>
+  scripts.find((file) => new RegExp(`^${name}-[\\w-]+\\.js$`).test(file));
+const viewerDownloads = [];
+for (const [pageName, viewerName] of VIEWERS) {
+  const page = chunkNamed(pageName);
+  const viewer = chunkNamed(viewerName);
+  if (!page || !viewer) {
+    fail('assets', `no ${page ? viewerName : pageName} chunk`);
+    continue;
+  }
+  const pageScripts = new Set([...initial, ...closure([page])]);
+  if ([...pageScripts].some(hasThree)) fail(page, 'loads Three.js before its 3D view is chosen');
+  if (![...pageScripts].some((file) => dynamicImports(file).includes(viewer)))
+    fail(page, `does not load ${viewer} lazily`);
+  if (!viewers.includes(viewer)) fail(viewer, 'is not a lazy chunk that loads Three.js');
+  // What a reader downloads on opening the 3D view, beyond what the page has
+  // loaded: Three.js, Fiber, the shared scene code and the viewer itself.
+  const download = closure([viewer]).filter((file) => !pageScripts.has(file));
+  const bytes = download.reduce((sum, file) => sum + gzipSize(file), 0);
+  viewerDownloads.push(`${viewerName} ${(bytes / 1000).toFixed(1)}`);
+  if (bytes > BUDGETS.threeChunk)
+    fail(viewer, `opening it downloads ${bytes} bytes gzip, budget ${BUDGETS.threeChunk}`);
+}
+if (viewers.length === 0) fail('assets', 'no lazy chunk loads the 3D renderer');
+for (const viewer of viewers)
+  if (!VIEWERS.some(([, name]) => viewer.startsWith(`${name}-`)))
+    fail(viewer, 'a 3D viewer these checks do not know: add it and its page to VIEWERS');
+for (const file of scripts.filter(hasThree))
+  if (withoutViewers.has(file)) fail(file, 'Three.js is reachable without opening a 3D view');
+// Readers who never open a 3D view never download it, offline caching included.
 const worker = read('sw.js') ?? '';
-for (const file of threeChunks)
+for (const file of closure(viewers).filter((f) => !withoutViewers.has(f)))
   if (worker.includes(file)) fail('sw.js', `precaches ${file}, which should load on demand`);
 
 if (problems.length) {
@@ -239,5 +285,5 @@ if (problems.length) {
 console.log(
   `verify-build: ${PRERENDER_PATHS.length} pages and 404.html are complete for base ${BASE_URL}` +
     ` (canonical origin ${SITE_URL}); initial scripts ${(initialBytes / 1000).toFixed(1)} kB gzip` +
-    ` in ${initial.length} files, 3D chunk ${threeChunks.map((f) => (gzipSize(f) / 1000).toFixed(1)).join(', ')} kB gzip`,
+    ` in ${initial.length} files; opening a 3D view downloads ${viewerDownloads.join(', ')} kB gzip`,
 );

@@ -30,6 +30,20 @@ test.describe('prerendered pages without JavaScript', () => {
       /Picture it/,
     ],
     ['anatomy', '/anatomy', 'JVM anatomy · JVM Atlas', 'Explore the JVM', /Class loading/],
+    [
+      'class-loading',
+      '/class-loading',
+      'Class loader explorer · JVM Atlas',
+      'How does the JVM find, load, verify and initialize your classes?',
+      /Who loads the classes of a running Java program\?/,
+    ],
+    [
+      'memory',
+      '/memory',
+      'Memory laboratory · JVM Atlas',
+      'Where does a running Java program keep everything?',
+      /Which areas of memory does a running JVM use/,
+    ],
     ['glossary', '/glossary', 'Glossary · JVM Atlas', 'Glossary', /Bytecode/],
     [
       'references',

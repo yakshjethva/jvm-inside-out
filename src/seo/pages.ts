@@ -44,6 +44,16 @@ const PAGES: Record<string, { name: string; description: string }> = {
     name: 'JVM anatomy',
     description: `An interactive map of the Java Virtual Machine: ${COMPONENT_IDS.length} components from class loading to garbage collection, each explained at three levels, with relationships, dissections and step-by-step walkthroughs.`,
   },
+  '/class-loading': {
+    name: 'Class loader explorer',
+    description:
+      'How the JVM finds, loads, links and initializes classes: explore the loaders of a running JVM, send requests through a delegation simulator and follow one class from loading to initialization, checked against JDK 25.',
+  },
+  '/memory': {
+    name: 'Memory laboratory',
+    description:
+      'Where a running Java program keeps everything: step through the stack and heap, dissect frames, measure object layouts, and compare heap and native memory across HotSpot collectors, with real JDK 25 output.',
+  },
   '/glossary': {
     name: 'Glossary',
     description:

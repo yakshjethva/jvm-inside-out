@@ -123,7 +123,7 @@ Reuse these instead of re-implementing behaviour:
 | Buttons and links     | `Button`, `ButtonLink`, `IconButton` (`components/ui`)                                            |
 | Tabs, toggles, levels | `SegmentedControl`, `LevelSwitch`                                                                 |
 | Tooltips and popovers | `Popover`, `GlossaryTerm`                                                                         |
-| Menus and drawers     | The mobile menu (`SiteHeader`), the explorer's component list                                     |
+| Menus and drawers     | The mobile menu and the Labs menu (`SiteHeader`), the explorer's component list                   |
 | Inspector panels      | `ComponentInspector`                                                                              |
 | Search                | `ComponentSearch`, glossary search                                                                |
 | Disclosure            | `<details>` styled as in the inspector and lessons                                                |
@@ -134,6 +134,8 @@ Reuse these instead of re-implementing behaviour:
 | Machine drawings      | `HeroMachine` (SVG drawn from content, HTML labels over it)                                       |
 | Exhibits and code     | `ExhibitFrame`, `CodeBlock`, `AccuracyNote`                                                       |
 | Checks and teach-back | `KnowledgeCheck`, `TeachBack`                                                                     |
+| Laboratories          | `LabHero` (question and stations), `StationView` (the teaching cycle), `Investigations`           |
+| Laboratory drawings   | `.lab-plate` (cut-corner plates: selected, on the path, acting), `ConduitLayer`, `LabViewer3D`    |
 
 A new primitive is added only when two or more places need it, and it is
 documented here.
@@ -147,8 +149,8 @@ manage focus and close with Escape.
 
 - Targets are at least 24 × 24 px, including text links in lists; links inside
   sentences are underlined.
-- Scrollable regions (code blocks, outputs) are focusable so a keyboard can
-  scroll them.
+- Scrollable regions (code blocks, outputs, wide tables) are focusable so a
+  keyboard can scroll them.
 - No page scrolls sideways at 360 px: long identifiers and paths wrap
   (`overflow-wrap: anywhere`), inline code may break across lines, fieldsets can
   shrink, and centred containers in `<main>` keep full width.

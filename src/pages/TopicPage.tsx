@@ -1,4 +1,11 @@
-import { ArrowRight, ChevronRight, Compass, Map as MapIcon, PlayCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  ChevronRight,
+  Compass,
+  FlaskConical,
+  Map as MapIcon,
+  PlayCircle,
+} from 'lucide-react';
 import { Link, useParams } from 'react-router';
 import { CodeBlock } from '@/components/code/CodeBlock';
 import { RichText } from '@/components/learning/RichText';
@@ -121,6 +128,17 @@ function Guide({ topic }: { topic: Topic }) {
                   >
                     <PlayCircle size={16} aria-hidden className="mt-0.5 shrink-0" />
                     <span>Watch it run: {scenario.title.replace(/`/g, '')}</span>
+                  </Link>
+                </li>
+              )}
+              {topic.lab && (
+                <li>
+                  <Link
+                    to={topic.lab.to}
+                    className="flex items-start gap-2 text-exec-300 hover:text-exec-200"
+                  >
+                    <FlaskConical size={16} aria-hidden className="mt-0.5 shrink-0" />
+                    <span>{topic.lab.label}</span>
                   </Link>
                 </li>
               )}

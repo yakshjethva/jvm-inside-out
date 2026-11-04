@@ -50,6 +50,30 @@ export const PRIMARY_NAV: NavItem[] = [
   { to: '/about', label: 'About', description: 'Why JVM Atlas exists, versions and accuracy' },
 ];
 
+/**
+ * The laboratories: deep, interactive explorations of one part of the machine.
+ * In the header they share one "Labs" menu; the mobile menu and the footer
+ * list them directly.
+ */
+export const LABS_NAV: NavItem[] = [
+  {
+    to: '/class-loading',
+    label: 'Class loader explorer',
+    description: 'Loaders, delegation and the life of a class, step by step',
+  },
+  {
+    to: '/memory',
+    label: 'Memory laboratory',
+    description: 'Stack, heap, frames, object layouts and native memory',
+  },
+];
+
+/** The laboratory that explores each region of the anatomy in depth. */
+export const LAB_FOR_REGION: Record<string, NavItem> = {
+  'class-loader-subsystem': LABS_NAV[0]!,
+  'runtime-data-areas': LABS_NAV[1]!,
+};
+
 /** Project pages, linked from the footer and the About page. */
 export const PROJECT_NAV: NavItem[] = [
   {

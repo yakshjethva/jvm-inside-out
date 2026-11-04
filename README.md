@@ -51,26 +51,41 @@ and [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the archite
   - The inspector answers _What is this?_, _Picture it_, _What actually happens?_, _See it
     working_, _Where does it fit?_ and _Check your understanding_, and keeps the technical
     details one step away.
+- **Class Loader Explorer** (`/class-loading`), a laboratory in three stations: the loaders of a
+  running JVM (2D or 3D), a delegation laboratory with twelve guided experiments and free
+  requests that add up (parent-first, child-first and the JDK's module-aware loaders, defining
+  and initiating loaders, loading constraints), and a lifecycle microscope that follows one class
+  through loading, verification, preparation, resolution and initialization. Investigations cover
+  identity, initialization order and its failures, unloading and leaks, and each loading error.
+- **Memory Laboratory** (`/memory`), in five stations: the specification's run-time data areas
+  beside the HotSpot structures that implement them (2D or 3D); `Person p1 = new Person("Alex")`
+  and two more real programs, step by step, with every thread's frames, the heap and the
+  references between them; a stack frame dissected; object layouts measured in three HotSpot
+  configurations; the heap under five collectors, native memory, each `OutOfMemoryError` and the
+  diagnostic tools.
 - **Learn** (`/learn`): ten guides that answer common questions (what is the JVM, how it works,
   its architecture, bytecode, class loading, heap vs stack, stack frames, garbage collection,
   interpreter vs JIT, HotSpot vs the specification), learning paths organised around questions,
   your progress and bookmarks.
 - **Three explanation levels:** Simple, Developer and Deep dive, chosen once and used everywhere.
-- A **glossary** of 84 terms, **references** (123 primary sources, with "cited by" links), and
+- A **glossary** of 89 terms, **references** (140 primary sources, with "cited by" links), and
   **About** and **Contributing** pages.
 - Progress, bookmarks, quiz answers and preferences are stored in your browser only, and are
   migrated, never reset, when their shape changes.
 
-Later milestones add the Class Loader Explorer, Runtime Memory Explorer, Execution Engine and
-Bytecode Explorers, GC Lab, Concurrency Lab and Collections Explorer. They are not linked from
-the site until they exist.
+Later milestones add the Execution Engine and Bytecode Explorers, the GC Lab, the Concurrency
+Lab and the Collections Explorer. They are not linked from the site until they exist.
 
 ## Accuracy
 
 - Specifications: JVMS and JLS for Java SE 25, Java SE 25 API documentation.
 - Implementation: OpenJDK HotSpot, JDK 25, checked against the `jdk-25-ga` source tag.
 - Every bytecode listing, flag value and log line was produced with OpenJDK 25.0.4 (`javac`,
-  `javap -c -v`, `java -XX:+PrintFlagsFinal`, `-Xlog`) and records how it was produced.
+  `javap -c -v`, `java -XX:+PrintFlagsFinal`, `-Xlog`) and records how it was produced. The
+  laboratories add program output, error messages and `jcmd` reports (`GC.heap_info` for each
+  collector, `VM.native_memory`, `VM.classloaders`, `Thread.print`, `GC.class_histogram`,
+  `GC.heap_dump`) from the same JDK; object layouts were measured with JOL 0.17 and
+  `Instrumentation.getObjectSize`. The simulators are unit-tested against these real runs.
 - Drawings mark provenance with line style as well as colour: solid for JVM Specification
   concepts, dashed with an `HS` tag for HotSpot structures, dotted for parts outside the JVM.
   Every simplified visualization says what it leaves out, and the 3D positions are a teaching
@@ -185,11 +200,17 @@ src/
     home/         the homepage's machine drawing and exhibits
     jvm/          the JVM explorer: layout, scene, views, tour, dissections
     anatomy-3d/   the 3D anatomy: viewer, scene, models, controls, fallbacks, tests
+    labs/         what both laboratories share: the hero, stations, investigations
+    class-loading/  the Class Loader Explorer's observatory, delegation lab and microscope
+    memory/       the Memory Laboratory's stations
+    lab-3d/       the laboratories' 3D models (lazy), built on the anatomy's camera and stage
     lesson/       the Start here lesson: exhibits, step controls, predictions, teach-back
     journey/      the journey machine
-  simulators/     pure models: class-file size and bytecode, tiering, reachability, playback
+  simulators/     pure models: class-file size and bytecode, tiering, reachability, playback,
+                  class loading (delegation), a class's lifecycle, memory (frames and heap)
   content/        JVM components and their teaching layer, regions, relationships,
-                  walkthroughs, quizzes, the first lesson, guides, learning paths
+                  walkthroughs, quizzes, the first lesson, guides, learning paths, and the
+                  laboratories' stations, experiments, programs and verified evidence (labs/)
   glossary/       glossary terms
   data/           source registry, brand and navigation
   hooks/, lib/    learning state and migration, explanation levels, rich text, geometry, storage

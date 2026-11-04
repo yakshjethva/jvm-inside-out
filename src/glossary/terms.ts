@@ -248,6 +248,44 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     references: [{ source: 'jvms-5.3' }, { source: 'jvms-5.3.4' }],
   },
   {
+    id: 'initiating-loader',
+    term: 'Initiating loader',
+    simple:
+      'The class loader the JVM asked for a class. It may hand the job to another loader, but it remembers the answer.',
+    deep: 'JVMS §5.3: a loader that creates a class, by defining it or by delegating, is an initiating loader of it; the defining loader always is one. The JVM records the initiating loader when the request returns, and `ClassLoader.findLoadedClass` answers from that record. Loaders in between that only passed the request on through Java calls are not recorded (HotSpot: `SystemDictionary::load_instance_class`, JDK 25).',
+    whyItExists:
+      'So a second request for the same name is answered at once, and so the JVM can check loading constraints for every loader that uses a name.',
+    componentId: 'parent-delegation',
+    related: ['defining-loader', 'parent-delegation', 'loading-constraint'],
+    misconception: {
+      myth: 'Every loader a request passes through remembers the class.',
+      truth:
+        'Only the loader the JVM asked and the defining loader record it; a loader that just delegated has no record of it.',
+    },
+    references: [
+      { source: 'jvms-5.3' },
+      { source: 'api-classloader' },
+      { source: 'src-systemdictionary' },
+    ],
+  },
+  {
+    id: 'loading-constraint',
+    term: 'Loading constraint',
+    simple:
+      'A promise the JVM makes two class loaders keep: when they share a method or field, a type name in its signature must mean the same class to both.',
+    deep: 'JVMS §5.3.4: when code defined by loader L1 resolves a field or method declared by a class of loader L2, every class type N in the descriptor gets the constraint N^L1 = N^L2. If both loaders already have a class for N and they differ, resolution fails with `LinkageError: loader constraint violation`; otherwise the constraint is recorded and enforced when either loader loads N later.',
+    whyItExists:
+      'Without it, two loaders could pass an object across a method call while disagreeing about its class, which would break type safety.',
+    componentId: 'parent-delegation',
+    related: ['defining-loader', 'initiating-loader', 'resolution'],
+    misconception: {
+      myth: 'Two classes with the same name in two loaders always fail when they meet.',
+      truth:
+        'They are different classes, so a cast between them fails, but nothing stops them existing side by side. A loading constraint fails only when a shared signature would make the two loaders disagree.',
+    },
+    references: [{ source: 'jvms-5.3.4' }, { source: 'src-systemdictionary' }],
+  },
+  {
     id: 'module',
     term: 'Module',
     simple:
@@ -449,6 +487,45 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
         'They are separate parts of process memory. The JVM manages the Java heap itself; native code uses the C heap.',
     },
     references: [{ source: 'jvms-2.5.3' }],
+  },
+  {
+    id: 'compressed-class-space',
+    term: 'Compressed class space',
+    simple:
+      'A reserved part of HotSpot’s class memory that lets every object point to its class with a short, 4-byte number.',
+    deep: 'With compressed class pointers (the default in JDK 25; turning them off is deprecated), each object header holds a 32-bit narrow `Klass*`, an offset into this space. `-XX:CompressedClassSpaceSize` (1 GB by default) reserves it; filling it throws `OutOfMemoryError: Compressed class space`.',
+    whyItExists: 'Smaller object headers: a 4-byte class pointer instead of 8 bytes.',
+    componentId: 'method-area',
+    related: ['metaspace', 'object-header', 'compressed-oops'],
+    references: [{ source: 'src-compressedklass' }, { source: 'src-metaspace' }],
+  },
+  {
+    id: 'direct-buffer',
+    term: 'Direct buffer',
+    simple:
+      'A block of memory outside the Java heap that a Java program can read and write, used for fast input and output.',
+    developer:
+      '`ByteBuffer.allocateDirect(n)` creates one. The total is limited by `-XX:MaxDirectMemorySize` (by default the maximum heap size); the memory is released when the buffer object is collected.',
+    deep: 'Accounted by `java.nio.Bits.reserveMemory`; exceeding the limit throws `OutOfMemoryError: Cannot reserve … bytes of direct buffer memory`. Native Memory Tracking reports it under Other.',
+    whyItExists:
+      'The operating system can read and write it directly, without copying through the Java heap.',
+    componentId: 'native-libraries',
+    related: ['heap', 'native-memory-tracking'],
+    references: [{ source: 'api-bytebuffer' }, { source: 'src-bits' }],
+  },
+  {
+    id: 'native-memory-tracking',
+    term: 'Native Memory Tracking',
+    aliases: ['NMT'],
+    simple:
+      'A HotSpot feature that counts the memory the JVM itself uses outside the Java heap, category by category.',
+    developer:
+      'Start the JVM with `-XX:NativeMemoryTracking=summary`, then run `jcmd <pid> VM.native_memory summary`: Java Heap, Class, Thread, Code, GC, Other and more, each reserved and committed.',
+    deep: 'Implemented in `src/hotspot/share/nmt`; it tracks HotSpot’s own `malloc`, `mmap` and arena allocations with a small overhead (reported under Native Memory Tracking). Memory a native library allocates on its own is not tracked.',
+    whyItExists: 'A process uses far more memory than `-Xmx`; NMT shows where the rest goes.',
+    componentId: 'runtime-data-areas',
+    related: ['metaspace', 'heap', 'direct-buffer'],
+    references: [{ source: 'src-nmt' }, { source: 'tool-jcmd' }],
   },
   {
     id: 'tlab',

@@ -38,15 +38,18 @@ too much too early:
 ## 3. Navigation
 
 ```text
-JVM Atlas   Start here · Explore anatomy · Learn · Glossary · References · About     (level) (menu)
+JVM Atlas   Start here · Explore anatomy · Labs ▾ · Learn · Glossary · References · About   (level) (menu)
 ```
 
 - The logo is the link home. **Start here** (`/start`): the guided first lesson. **Explore
-  anatomy** (`/anatomy`): the explorer, with the 2D map, the 3D model and the list. **Learn**
+  anatomy** (`/anatomy`): the explorer, with the 2D map, the 3D model and the list. **Labs**: a
+  small menu with the two laboratories, the Class Loader Explorer (`/class-loading`) and the
+  Memory Laboratory (`/memory`); Escape closes it and returns focus to its button. **Learn**
   (`/learn`): ten guides and the learning paths, each beginning with a question (the earlier
   address `/paths` still works). **Glossary**, **References** and **About** complete the bar.
-- The mobile menu lists Home, the same six pages, then Contributing, Project status and the
-  source code. The footer links the primary and project pages.
+- The mobile menu lists Home, the same six pages, the laboratories, then Contributing, Project
+  status and the source code. The footer links the primary pages, the laboratories and the
+  project pages.
 - The level control in the header reads "Simple", "Developer" or "Deep dive".
 
 ## 4. Homepage
@@ -68,7 +71,8 @@ The homepage introduces the atlas before it teaches, and every section leads som
    editable line of Java followed through compiler, class file, class loader, memory, execution
    engine, CPU and operating system, and output, with real `javac` 25.0.4 bytecode) and the first
    guides.
-6. **Exhibits:** four walkthroughs and two dissections, each with its step count or summary.
+6. **Exhibits:** the two laboratories, then four walkthroughs and two dissections, each with its
+   step count or summary.
 7. **Accuracy:** simple is short, never false; the provenance line styles; the number of primary
    sources.
 8. **The project:** independent, free and open, with About, Contributing and the source code.
@@ -94,7 +98,8 @@ question → prediction → what happens → why → the technical term → try 
 | —   | What you now know       | Recap diagram, teach-back in own words, five-question check        | Next topic and the full map                                  |
 
 Each chapter links to its component on the JVM map (for example Memory → Runtime data areas),
-so the lesson and the explorer stay one machine. Interactive state can be paused, stepped backwards and restarted. Animation is never the only
+so the lesson and the explorer stay one machine; the loading and memory chapters also lead into
+their laboratories. Interactive state can be paused, stepped backwards and restarted. Animation is never the only
 carrier of information; with reduced motion, steps change without movement. Chapter progress is
 stored locally. The chapter is reflected in the URL (`/start?chapter=memory`).
 
@@ -129,7 +134,8 @@ Default view, top to bottom:
 2. **Picture it.** An analogy with its mapping and its limits (core concepts).
 3. **What actually happens?** The explanation at the chosen level.
 4. **See it working.** The matching interactive from the lesson (core concepts), or a link to the
-   component's dissection or a walkthrough step where it is active.
+   component's dissection or a walkthrough step where it is active. Every part of the class
+   loader subsystem and of the run-time data areas also links to its laboratory.
 5. **Where does it fit?** Its parent and up to three connections in plain sentences.
 6. **Check your understanding.** One question with explained answers, or a teach-back prompt.
 
@@ -164,3 +170,35 @@ lit exhibit case on the dark blueprint canvas, and only moves when the learner a
   decorative eyebrows; few borders; one dominant visual per screen.
 - **Motion:** answers the learner's action (a token travelling, a frame appearing, a reference
   breaking). Reduced motion keeps every state, without movement.
+
+## 10. Laboratories
+
+A laboratory takes one subsystem from the whole down to its smallest part, as a sequence of
+**stations** at different scales. Each station follows the teaching cycle: the question → a
+prediction (where one helps) → _Explore and observe_ (the exhibit, which changes only when the
+learner acts and says in its caption what changed and why) → _What is going on_ at the chosen
+level → the technical term → a one-question check → _Technical insight_ (verified output and
+sources, open by default at Deep dive). The exhibit stays hidden until the learner predicts or
+skips, unless the station was visited before or the URL already holds exhibit state (a shared
+link).
+
+| Laboratory                               | Stations (scale)                                                                                                                                                                                                                 |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Class Loader Explorer (`/class-loading`) | Loader observatory (subsystem) · Delegation laboratory (one request, twelve guided experiments and free requests that add up) · Lifecycle microscope (one class: loading, verification, preparation, resolution, initialization) |
+| Memory Laboratory (`/memory`)            | Memory observatory (specification areas and HotSpot structures) · Living stack and heap (three real programs, step by step) · Stack frame dissection · Object layout laboratory · Heap and native memory                         |
+
+- **Everything is in the URL** (station, selection, requests, step, configuration), so any view
+  can be shared. Back undoes a request, an experiment or an observatory selection; steps, the
+  living lab's highlights and the layout and collector choices replace the current history entry
+  instead of filling it.
+- **Investigations** below the stations answer questions from real systems (identity and
+  namespaces, initialization failures, unloading and leaks, each error) with output from a real
+  JVM. A five-question check and the sources close each laboratory.
+- **Simulators, not animations.** The delegation laboratory runs a deterministic model of the
+  JDK 25 algorithms; the living stack and heap replays validated memory operations. Unit tests
+  check both against real `java` output, and every listing says how it was produced.
+- **Progress** uses the lesson record (`lab:class-loading`, `lab:memory`): a station counts as
+  visited when the learner moves on from it. No stored shape changed, so no migration was needed.
+- **Entrances:** the Labs menu, the home page, Learn, the Start here chapters on loading and
+  memory, the guides on class loading, heap and stack, and stack frames, and the inspector's _See
+  it working_.

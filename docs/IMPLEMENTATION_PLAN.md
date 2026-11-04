@@ -55,8 +55,8 @@ The four layers are kept separate so contributors can change one without touchin
 | `/references`    | References                | M1/M2      | Built                                                       |
 | `/about`         | About                     | M1         | Built (includes project status)                             |
 | `/contributing`  | Contributing (footer)     | M1         | Built                                                       |
-| `/class-loading` | Class Loader Explorer     | M3         | Not routed yet                                              |
-| `/memory`        | Runtime Memory Explorer   | M4         | Not routed yet                                              |
+| `/class-loading` | Class loader explorer     | M3         | Built (three stations, investigations, 2D and 3D)           |
+| `/memory`        | Memory laboratory         | M4         | Built (five stations, investigations, 2D and 3D)            |
 | `/execution`     | Execution Engine Explorer | M5         | Not routed yet                                              |
 | `/bytecode`      | Bytecode Explorer         | M5         | Not routed yet                                              |
 | `/gc`            | Garbage Collection Lab    | M6         | Not routed yet                                              |
@@ -65,15 +65,16 @@ The four layers are kept separate so contributors can change one without touchin
 
 LX is the learning-experience redesign (see [`LEARNING_EXPERIENCE.md`](LEARNING_EXPERIENCE.md));
 JA is the JVM Atlas release (rebrand, prerendering, guides, 3D anatomy). The header shows Start
-here, Explore anatomy, Learn, Glossary, References and About; Contributing and Project status are
-in the footer and the mobile menu.
+here, Explore anatomy, Labs (a menu with the two laboratories), Learn, Glossary, References and
+About; Contributing and Project status are in the footer and the mobile menu.
 
 Pages that are not built are **not linked**. The Learn page and About → Project status list them
 as "in development" with their milestone, as plain text. No dead navigation, no empty pages.
 
 Selection state lives in the URL so every view can be shared and the back button works:
 `/anatomy?c=heap&mode=internal&view=full`, `/anatomy?mode=execution&s=jit&step=3`,
-`/start?chapter=memory`. Explorer `mode` values keep their original names
+`/start?chapter=memory`, `/class-loading?lab=delegation&exp=sql&step=3`,
+`/memory?lab=living&step=7&select=obj:o-person`. Explorer `mode` values keep their original names
 (`anatomy|exploded|internal|execution`); the interface calls them Overview, Show the parts, Look
 inside and Watch it run.
 
@@ -186,8 +187,9 @@ migration: data from an older release is repaired field by field (for example `b
 
 `RichText` is a small, tested inline syntax: `` `code` ``, `**strong**`, `[[glossary-id|label]]` for
 clickable glossary terms, and `[label](https://…)` for links. It keeps content readable in a diff
-and renders without shipping a Markdown runtime. Long-form lessons (M3 onwards) will use MDX; the
-same glossary and citation components will be exposed to MDX.
+and renders without shipping a Markdown runtime. The laboratories (M3, M4) are built from the
+same typed content (`src/content/labs/`), not MDX, so the content checks cover them (see the
+Monaco and MDX decision in section 6).
 
 Layout coordinates live beside the visualization (`src/modules/jvm/layout.ts`), never in content.
 
@@ -195,8 +197,22 @@ Layout coordinates live beside the visualization (`src/modules/jvm/layout.ts`), 
 
 - **Stack:** React 19, TypeScript 6 (strict; typescript-eslint does not yet support TypeScript 7),
   Vite 8, Tailwind CSS 4, Motion, Lucide, Shiki (fine-grained, JavaScript regex engine, Java and
-  shell grammars only), Vitest + Testing Library, Playwright for browser tests. Monaco Editor and MDX
-  are deferred to the milestones that use them (M3/M4), which keeps the first bundle small.
+  shell grammars only), Vitest + Testing Library, Playwright for browser tests.
+- **Monaco Editor and MDX: assessed for M3 and M4, not installed.** An in-page editor is worth its
+  size only if the learner's code runs, and a static site cannot run a JVM; simulating arbitrary
+  Java would show output no JVM produced. The laboratories therefore offer guided experiments
+  and choices whose every result is reproducible and verified. MDX would let prose bypass the
+  typed content, the glossary and citation checks and the three explanation levels; typed content
+  with `RichText` and Shiki covers what the laboratories show. Revisit only for a feature that
+  needs them, with the reason recorded in the pull request.
+- **Laboratories:** each is a page of stations (`LabHero`, `StationView`) whose exhibits are
+  driven by pure simulators: `src/simulators/classLoading.ts` (the JDK 25 delegation algorithms:
+  `ClassLoader.loadClass`, `BuiltinClassLoader.loadClassOrNull`, defining and initiating loaders,
+  loading constraints), `classLifecycle.ts` (loading, linking and initialization of one class)
+  and `memory.ts` (threads, frames, operand stacks, objects, references, reachability). Every
+  transition is validated and immutable, steps have stable ids, and runs serialize to the URL
+  (`run=app:java.lang.String,…`) and replay. The 3D models (`src/modules/lab-3d`) reuse the
+  anatomy's camera rig, stage and materials and load only when chosen.
 - **Anatomy rendering:** one SVG `viewBox` (1600 × 1100) with a transform group for pan/zoom.
   Dragging updates the transform through a ref (no React re-render per pointer move); the zoom level
   is committed to state only when it crosses a level-of-detail threshold. Edges use orthogonal routes
@@ -228,21 +244,23 @@ Layout coordinates live beside the visualization (`src/modules/jvm/layout.ts`), 
   lesson and the journey machine; Playwright tests (desktop and mobile) that run against the
   production build served by `scripts/serve-pages.mjs`, which reproduces GitHub Pages on the
   `/jvm-inside-out/` subpath (redirects, `404.html`, status codes), including an offline reload, the
-  whole first lesson, reduced motion and the migration of stored data.
+  whole first lesson, reduced motion and the migration of stored data. The laboratories add
+  simulator tests that reproduce real `java` output line by line, layout tests that add up to the
+  measured object sizes, URL-state tests and their own browser tests.
 
 ### Milestones
 
-| Milestone | Scope                                                                                                          | Done when                                                      |
-| --------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| M1        | Setup, design system, layout, navigation, home, paths, glossary, references, about, contributing, Pages deploy | Builds, tests pass, subpath build verified locally             |
-| M2        | JVM anatomy: all subsystems, nested parts, inspector, relationships, 4 modes, layers, quiz                     | Acceptance criteria 3–6, 9–12 below                            |
-| LX        | Learning experience: Start here lesson, journey machine, explorer overview, three levels, inspector disclosure | Done in this release; see `LEARNING_EXPERIENCE.md`             |
-| M3        | Class Loader Explorer (delegation simulator, loading/linking/init walkthrough), MDX lessons                    | Criterion 7                                                    |
-| M4        | Runtime Memory Explorer (stack/heap lab, `Person` timeline, Monaco)                                            | Criterion 8                                                    |
-| M5        | Execution Engine Explorer and Bytecode Explorer (verified `javap` listings)                                    | Operand stack/locals stepping works for the shipped examples   |
-| M6        | Garbage Collection Lab (object graph editor, reachability, simulated collection)                               | Reachable / unreachable / reclaimed states are distinguishable |
-| M7        | Concurrency Lab (interleaving simulator) and Collections Explorer (HashMap playground)                         | Simulators covered by unit tests                               |
-| M8        | Remaining curriculum, glossary expansion, quizzes, accessibility and performance audit                         | Release checklist complete                                     |
+| Milestone | Scope                                                                                                                  | Done when                                                      |
+| --------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| M1        | Setup, design system, layout, navigation, home, paths, glossary, references, about, contributing, Pages deploy         | Builds, tests pass, subpath build verified locally             |
+| M2        | JVM anatomy: all subsystems, nested parts, inspector, relationships, 4 modes, layers, quiz                             | Acceptance criteria 3–6, 9–12 below                            |
+| LX        | Learning experience: Start here lesson, journey machine, explorer overview, three levels, inspector disclosure         | Done in this release; see `LEARNING_EXPERIENCE.md`             |
+| M3        | Class Loader Explorer: loader observatory (2D, 3D), delegation simulator and lab, lifecycle microscope, investigations | Done in this release (criterion 7)                             |
+| M4        | Memory Laboratory: observatory (2D, 3D), living stack and heap, frames, object layouts, heap and native memory         | Done in this release (criterion 8)                             |
+| M5        | Execution Engine Explorer and Bytecode Explorer (verified `javap` listings)                                            | Operand stack/locals stepping works for the shipped examples   |
+| M6        | Garbage Collection Lab (object graph editor, reachability, simulated collection)                                       | Reachable / unreachable / reclaimed states are distinguishable |
+| M7        | Concurrency Lab (interleaving simulator) and Collections Explorer (HashMap playground)                                 | Simulators covered by unit tests                               |
+| M8        | Remaining curriculum, glossary expansion, quizzes, accessibility and performance audit                                 | Release checklist complete                                     |
 
 ### First-release acceptance criteria and where they are met
 
@@ -254,8 +272,8 @@ Layout coordinates live beside the visualization (`src/modules/jvm/layout.ts`), 
 | 4   | Every major component is selectable              | M2                                                             |
 | 5   | Inspector has substantive technical explanations | M2                                                             |
 | 6   | Relationships are navigable                      | M2                                                             |
-| 7   | Working class-loading walkthrough                | M3 (previews: the launch walkthrough, Start here chapter 4)    |
-| 8   | Memory Explorer shows stack, heap and references | M4 (previews: `new Person("Alex")`, Start here chapter 5)      |
+| 7   | Working class-loading walkthrough                | M3: `/class-loading` (also the launch walkthrough, chapter 4)  |
+| 8   | Memory Explorer shows stack, heap and references | M4: `/memory` (also Start here chapter 5)                      |
 | 9   | Every diagram has accuracy notes                 | M2                                                             |
 | 10  | Works without a backend or paid service          | M1                                                             |
 | 11  | README covers local development and deployment   | M1                                                             |
@@ -303,11 +321,17 @@ src/
     ui/           buttons, badges, segmented control, callouts
   modules/
     jvm/          explorer: layout, explorer state, overview regions, tour, internal dissections
+    anatomy-3d/   the 3D anatomy
+    labs/         shared laboratory shell: hero, stations, investigations
+    class-loading/  Class Loader Explorer stations and URL state
+    memory/       Memory Laboratory stations and URL state
+    lab-3d/       the laboratories' 3D models
     lesson/       Start here: exhibits, stepper, prediction, term card, teach-back
     journey/      homepage journey machine
-  simulators/     pure TS models: playback, journey (class-file size, bytecode), tiering, reachability
+  simulators/     pure TS models: playback, journey (class-file size, bytecode), tiering, reachability,
+                  class loading, class lifecycle, memory
   content/        JVM component docs, teaching layer, regions, relationships, scenarios, quiz,
-                  the first lesson, learning paths, questions, project status
+                  the first lesson, learning paths, questions, project status, laboratories (labs/)
   glossary/       glossary terms
   data/           reference registry, site metadata, navigation
   hooks/          pan/zoom, persistence, media queries, reduced motion

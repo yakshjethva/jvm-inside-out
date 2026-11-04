@@ -1,7 +1,8 @@
 # The 3D anatomy
 
 How the 3D model of the JVM is built, what it may and may not claim, and how it stays fast and
-usable for everyone. Read this before changing anything in `src/modules/anatomy-3d`.
+usable for everyone. Read this before changing anything in `src/modules/anatomy-3d` or
+`src/modules/lab-3d` (the laboratories' models, [below](#the-laboratories-models)).
 
 ## What it is for
 
@@ -99,16 +100,21 @@ words.
 
 ## Performance
 
-- **Never in the first load.** `Anatomy3D` is imported with `React.lazy` only when `viewer=3d`.
-  `scripts/verify-build.mjs` fails the build if Three.js appears in the scripts `index.html`
-  loads or in the anatomy page's static imports, and enforces gzip budgets:
+- **Never in the first load.** `Anatomy3D` is imported with `React.lazy` only when `viewer=3d`,
+  and so are the laboratories' models. Three.js, Fiber and the scene code the viewers share are
+  one chunk that only the viewers import. `scripts/verify-build.mjs` fails the build if Three.js
+  is in the scripts `index.html` loads, in the static imports of a page with a 3D view
+  (`JvmAnatomyPage`, `ClassLoadingPage`, `MemoryPage`) or anywhere reachable without opening a
+  3D view, if the service worker precaches a viewer-only chunk, and if a budget is exceeded:
 
-  | Scripts                                | Budget (gzip) | Measured on this branch |
-  | -------------------------------------- | ------------- | ----------------------- |
-  | Initial (entry and its static imports) | 125 kB        | 112.0 kB                |
-  | 3D chunk (Three.js, Fiber, the model)  | 275 kB        | 253.1 kB                |
+  | Scripts (gzip)                                                        | Budget | Measured on this branch                                   |
+  | --------------------------------------------------------------------- | ------ | --------------------------------------------------------- |
+  | Initial (entry and its static imports)                                | 125 kB | 113.9 kB                                                  |
+  | Opening a 3D view (everything it downloads beyond its page's scripts) | 275 kB | anatomy 254.0 kB, class loaders 256.9 kB, memory 255.4 kB |
 
-  Raise a budget only with a reason recorded in the pull request.
+  The 3D budget used to apply to one chunk; since the viewers share Three.js it applies to the
+  whole download a 3D view causes, which is stricter. Raise a budget only with a reason recorded
+  in the pull request.
 
 - While the chunk loads, a small original SVG of stacked layers holds the space.
 - **Demand rendering** (`frameloop="demand"`): a frame is drawn only when something changed —
@@ -120,7 +126,7 @@ words.
   written to Three.js objects and DOM nodes on rendered frames; React state changes only on
   input (selection, hover, slider).
 - **Context loss:** if the browser takes the graphics context back, the view says so and offers
-  "Restart the 3D view" (a fresh renderer) or the 2D map.
+  "Restart the 3D view" (a fresh renderer) or the page's 2D view.
 
 Not done yet: adaptive quality that measures frame times while the model is in use (the
 starting detail level comes from device hints and the learner's choice).
@@ -147,6 +153,42 @@ browser tests tolerate exactly this message and should drop the exception when F
 
 A software renderer is not a GPU benchmark: these tests prove behaviour, not frame rates on real
 devices.
+
+## The laboratories' models
+
+The [Class Loader Explorer](../src/pages/ClassLoadingPage.tsx) and the
+[Memory Laboratory](../src/pages/MemoryPage.tsx) each offer a 3D model next to their 2D
+observatory (`viewer=3d`). They follow every rule above and share the anatomy's camera rig,
+stage, materials, keyboard handling, fallbacks and WebGL checks.
+
+```text
+src/modules/lab-3d/
+  LabViewer3D.tsx          the shared shell: canvas, camera buttons, keys, "Spread the levels",
+                           Reassemble, Isolate, Reduce detail, live region, context-loss restart
+  LoaderObservatory3D.tsx  the class loaders as terraces, a request travelling, a guided tour
+  MemoryObservatory3D.tsx  the specification's areas above HotSpot's structures, linked
+  SceneNodes.tsx           prisms and boxes, provenance outlines, the explode animation
+  SceneLinks.tsx           links and arrowheads, a token travelling along a request's path
+  SceneLabels.tsx          HTML labels projected from the scene
+  data/                    labScene.ts (shared types), loaderScene.ts, memoryScene.ts: pure layouts
+  tests/                   Vitest: both layouts
+```
+
+- **One source of truth.** The loader model draws the delegation simulator's world and its
+  current runtime (`src/content/labs/classLoading.ts`, `src/simulators/classLoading.ts`); the
+  request it plays is the last one sent in the delegation laboratory, or a demonstration request
+  until there is one. The memory model draws `MEMORY_AREAS` and their `mapsTo` links. Selection
+  is the page's URL state (`loader`, `area`), shared with the 2D view and the inspectors.
+- **Teaching layouts.** The terraces show delegation (parents in front), the decks show
+  specification above implementation; neither is a memory map, and each page's note says so.
+  Per-thread areas are drawn for two threads.
+- **Motion explains a change.** A request travels hop by hop along its real path; each hop is
+  announced. With reduced motion there is no token: the whole path is drawn and announced at once.
+- **Camera homes.** `CameraRig` takes an optional `home` (target, distance, angles), so each
+  model opens on a view that shows all of it; the anatomy keeps its own default.
+- **Tests:** `src/modules/lab-3d/tests/` (layouts: every loader and area drawn, levels and decks
+  in order, explode, links, isolation) and `tests/e2e/labs.spec.ts` (lazy loading, the guided
+  tour and keyboard changing the shared selection, the no-WebGL fallback, context loss).
 
 ## Community skills
 
