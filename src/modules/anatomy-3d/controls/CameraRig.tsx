@@ -12,8 +12,26 @@ export interface CameraApi {
   frame: (center: Vec3, radius: number) => void;
 }
 
-const HOME_TARGET = new Vector3(0, 0.2, 0.4);
-const HOME = new Spherical(25, 0.95, -0.55);
+/** Where the camera rests and returns to on reset. */
+export interface CameraHome {
+  target: Vec3;
+  distance: number;
+  /** Angle from straight above, in radians. */
+  polar: number;
+  /** Turn around the vertical axis, in radians. */
+  azimuth: number;
+}
+
+/** The anatomy model's home; laboratory scenes pass their own. */
+const DEFAULT_HOME: CameraHome = {
+  target: [0, 0.2, 0.4],
+  distance: 25,
+  polar: 0.95,
+  azimuth: -0.55,
+};
+const homeTarget = (home: CameraHome) => new Vector3(...home.target);
+const homeOffset = (home: CameraHome) =>
+  new Vector3().setFromSpherical(new Spherical(home.distance, home.polar, home.azimuth));
 const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 42;
 const MIN_POLAR = 0.12;
@@ -37,15 +55,23 @@ export function CameraRig({
   apiRef,
   pendingRef,
   reducedMotion,
+  home = DEFAULT_HOME,
 }: {
   apiRef: MutableRefObject<CameraApi | null>;
   /** A framing requested before the camera existed; applied once it does. */
   pendingRef: MutableRefObject<{ center: Vec3; radius: number } | null>;
   reducedMotion: boolean;
+  /** Where the camera starts and returns to (read when the controls are created and on reset). */
+  home?: CameraHome;
 }) {
   const get = useThree((state) => state.get);
   const controlsRef = useRef<OrbitControls | null>(null);
   const tween = useRef<Tween | null>(null);
+  const homeRef = useRef(home);
+  // Declared before the effects below, so they read the current home.
+  useEffect(() => {
+    homeRef.current = home;
+  }, [home]);
 
   // The controls are an external system: created, wired and disposed here.
   useEffect(() => {
@@ -56,8 +82,8 @@ export function CameraRig({
     orbit.minPolarAngle = MIN_POLAR;
     orbit.maxPolarAngle = MAX_POLAR;
     orbit.screenSpacePanning = true;
-    orbit.target.copy(HOME_TARGET);
-    camera.position.copy(HOME_TARGET).add(new Vector3().setFromSpherical(HOME));
+    orbit.target.copy(homeTarget(homeRef.current));
+    camera.position.copy(homeTarget(homeRef.current)).add(homeOffset(homeRef.current));
     orbit.update();
     const onChange = () => invalidate();
     // A drag or zoom by the learner takes over from any automatic camera move.
@@ -132,7 +158,8 @@ export function CameraRig({
         moveTo(target, target.clone().add(current.setLength(distance)));
       },
       reset() {
-        moveTo(HOME_TARGET.clone(), HOME_TARGET.clone().add(new Vector3().setFromSpherical(HOME)));
+        const target = homeTarget(homeRef.current);
+        moveTo(target, target.clone().add(homeOffset(homeRef.current)));
       },
       frame(center, radius) {
         const target = new Vector3(...center);

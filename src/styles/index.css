@@ -269,6 +269,56 @@
     box-shadow: var(--shadow-case);
   }
 
+  /*
+   * A laboratory plate: one part of the machine drawn with cut corners, so a
+   * structure (a class loader, a memory area) never reads as a plain card.
+   * The edge is a 1.5 px band of --plate-edge; states change the edge and
+   * always add words as well (see the lab components).
+   */
+  .lab-plate {
+    --plate-edge: var(--color-rt-700);
+    --plate-fill: var(--color-ink-900);
+    position: relative;
+    padding: 1.5px;
+    background: var(--plate-edge);
+    clip-path: polygon(
+      14px 0,
+      calc(100% - 14px) 0,
+      100% 14px,
+      100% calc(100% - 14px),
+      calc(100% - 14px) 100%,
+      14px 100%,
+      0 calc(100% - 14px),
+      0 14px
+    );
+  }
+  .lab-plate > .lab-plate-fill {
+    height: 100%;
+    background: var(--plate-fill);
+    clip-path: polygon(
+      13.4px 0,
+      calc(100% - 13.4px) 0,
+      100% 13.4px,
+      100% calc(100% - 13.4px),
+      calc(100% - 13.4px) 100%,
+      13.4px 100%,
+      0 calc(100% - 13.4px),
+      0 13.4px
+    );
+  }
+  .lab-plate[data-state='selected'] {
+    --plate-edge: var(--color-rt-300);
+    --plate-fill: var(--color-ink-800);
+  }
+  .lab-plate[data-state='path'] {
+    --plate-edge: var(--color-exec-700);
+  }
+  .lab-plate[data-state='acting'] {
+    --plate-edge: var(--color-exec-400);
+    --plate-fill: var(--color-exec-900);
+    padding: 2.5px;
+  }
+
   /* Comfortable long-form reading for lessons: about 65 characters per line. */
   .reading {
     max-width: 40rem;
@@ -395,6 +445,34 @@
 .ij-flowing {
   stroke-dasharray: 6 6;
   animation: ij-flow 1.1s linear infinite;
+}
+
+/*
+ * A laboratory conduit that draws itself from the acting loader to the other
+ * one (pathLength=1), or fades in dashed for "nothing found". With reduced
+ * motion the end state appears at once.
+ */
+.lab-conduit-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lab-draw 560ms var(--ease-out-quint) forwards;
+}
+.lab-conduit-miss {
+  stroke-dasharray: 0.03 0.022;
+  animation: lab-fade var(--duration-slow) var(--ease-standard) both;
+}
+@keyframes lab-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes lab-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes ij-pulse {

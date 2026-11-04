@@ -1,4 +1,12 @@
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Compass, Hand } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Compass,
+  FlaskConical,
+  Hand,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { CodeBlock } from '@/components/code/CodeBlock';
@@ -24,6 +32,12 @@ const LESSON = FIRST_RUN;
 const CHAPTERS = LESSON.chapters;
 const TOTAL_MINUTES = CHAPTERS.reduce((sum, chapter) => sum + chapter.minutes, 0);
 const chapterHref = (id: string) => `/start?chapter=${id}`;
+
+/** Chapters with a laboratory that goes further. */
+const CHAPTER_LABS: Partial<Record<string, { to: string; label: string }>> = {
+  loading: { to: '/class-loading', label: 'Go further in the class loader explorer' },
+  memory: { to: '/memory?lab=living', label: 'Go further in the memory laboratory' },
+};
 
 /** The first lesson: "What happens when you run a Java program?" */
 export function StartHerePage() {
@@ -354,6 +368,15 @@ function ChapterView({
               <Compass size={16} aria-hidden className="shrink-0" />
               {getComponentDoc(chapter.component).name} on the JVM map
             </Link>
+            {CHAPTER_LABS[chapter.id] && (
+              <Link
+                to={CHAPTER_LABS[chapter.id]!.to}
+                className="mt-2 flex w-fit items-center gap-2 text-[15px] text-exec-300 underline underline-offset-4 hover:text-exec-200"
+              >
+                <FlaskConical size={16} aria-hidden className="shrink-0" />
+                {CHAPTER_LABS[chapter.id]!.label}
+              </Link>
+            )}
           </div>
 
           <section aria-labelledby={`${chapter.id}-check`} className="mt-12">

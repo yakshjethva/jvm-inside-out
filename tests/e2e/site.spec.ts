@@ -188,6 +188,15 @@ test.describe('offline', () => {
     ).toBeVisible();
     await page.getByRole('radio', { name: /Watch it run/ }).click();
     await expect(page.getByText('Step 1 of', { exact: false })).toBeVisible();
+
+    // The laboratories work offline too (their 3D models load only when chosen online).
+    await page.goto('memory?lab=living&step=3');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Where does a running Java program keep everything?',
+    );
+    await expect(page.getByText(/^Step 4 of \d+$/)).toBeVisible();
+    await page.goto('class-loading?lab=delegation&exp=sql&step=2');
+    await expect(page.getByText(/^Step 3 of \d+$/)).toBeVisible();
   });
 });
 
@@ -203,6 +212,16 @@ test.describe('small screens', () => {
       'anatomy',
       'anatomy?viewer=list',
       'anatomy?mode=execution&s=jit',
+      'class-loading',
+      'class-loading?loader=app',
+      'class-loading?lab=delegation&exp=sql&step=3',
+      'class-loading?lab=lifecycle&step=4',
+      'memory',
+      'memory?area=metaspace',
+      'memory?lab=living&step=7',
+      'memory?lab=frames&step=4',
+      'memory?lab=layout&object=person',
+      'memory?lab=heap',
       'glossary',
       'references',
       'contributing',

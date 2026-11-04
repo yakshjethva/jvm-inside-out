@@ -13,6 +13,8 @@ export const pageLoaders = {
   paths: () => import('@/pages/LearningPathsPage'),
   topic: () => import('@/pages/TopicPage'),
   anatomy: () => import('@/pages/JvmAnatomyPage'),
+  classLoading: () => import('@/pages/ClassLoadingPage'),
+  memory: () => import('@/pages/MemoryPage'),
   glossary: () => import('@/pages/GlossaryPage'),
   references: () => import('@/pages/ReferencesPage'),
   about: () => import('@/pages/AboutPage'),
@@ -49,6 +51,14 @@ export const routes: RouteObject[] = [
       {
         path: 'anatomy',
         lazy: () => pageLoaders.anatomy().then((m) => ({ Component: m.JvmAnatomyPage })),
+      },
+      {
+        path: 'class-loading',
+        lazy: () => pageLoaders.classLoading().then((m) => ({ Component: m.ClassLoadingPage })),
+      },
+      {
+        path: 'memory',
+        lazy: () => pageLoaders.memory().then((m) => ({ Component: m.MemoryPage })),
       },
       {
         path: 'glossary',

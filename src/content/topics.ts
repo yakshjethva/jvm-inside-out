@@ -36,6 +36,8 @@ export interface Topic {
   explore: ComponentId;
   /** A walkthrough that shows it running. */
   scenario?: string;
+  /** A laboratory station that explores it in depth: its link and label. */
+  lab?: { to: string; label: string };
   related: string[];
 }
 
@@ -107,6 +109,10 @@ export const TOPICS: Topic[] = [
     chapter: 'loading',
     explore: 'class-loader-subsystem',
     scenario: 'launch',
+    lab: {
+      to: '/class-loading?lab=delegation',
+      label: 'Follow a request in the class loader explorer',
+    },
     related: ['what-is-bytecode', 'how-the-jvm-works', 'jvm-architecture'],
   },
   {
@@ -122,6 +128,10 @@ export const TOPICS: Topic[] = [
     chapter: 'memory',
     explore: 'runtime-data-areas',
     scenario: 'new-person',
+    lab: {
+      to: '/memory?lab=living',
+      label: 'Step through the stack and heap in the memory laboratory',
+    },
     related: ['jvm-stack-frames', 'garbage-collection', 'jvm-architecture'],
   },
   {
@@ -138,6 +148,7 @@ export const TOPICS: Topic[] = [
     chapter: 'memory',
     explore: 'stack-frame',
     scenario: 'new-person',
+    lab: { to: '/memory?lab=frames', label: 'Dissect a frame in the memory laboratory' },
     related: ['heap-vs-stack', 'what-is-bytecode', 'interpreter-vs-jit-compiler'],
   },
   {

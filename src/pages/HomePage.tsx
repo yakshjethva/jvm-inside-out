@@ -9,7 +9,7 @@ import { SCENARIOS } from '@/content/jvm/scenarios';
 import { FIRST_RUN } from '@/content/lesson/firstRun';
 import { TOPICS } from '@/content/topics';
 import { REFERENCE_IDS } from '@/data/references';
-import { SITE } from '@/data/site';
+import { LABS_NAV, SITE } from '@/data/site';
 import { useProgress } from '@/hooks/useLearningState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn } from '@/lib/cn';
@@ -408,7 +408,26 @@ export function HomePage() {
             <code className="font-mono text-[0.9em] text-fg">javap</code> output, or open a part and
             see its internal structure.
           </p>
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-4 md:grid-cols-2" aria-label="Laboratories">
+            {LABS_NAV.map((lab) => (
+              <li key={lab.to}>
+                <Link
+                  to={lab.to}
+                  className="surface-instrument blueprint group flex h-full flex-col rounded-xl border border-ink-600 p-6 transition-colors hover:border-exec-400"
+                >
+                  <span className="text-[13px] text-exec-300">Laboratory</span>
+                  <span className="mt-1.5 font-serif text-[24px] leading-snug text-fg group-hover:text-exec-200">
+                    {lab.label}
+                  </span>
+                  <span className="mt-2 text-[15px] leading-relaxed text-fg-muted">
+                    {lab.description}. Predict, run it step by step, and check every result against
+                    real JDK 25 output.
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {HOME_EXHIBITS.map((exhibit) => {
               const scenario =
                 exhibit.kind === 'walkthrough'

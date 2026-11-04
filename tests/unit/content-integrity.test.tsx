@@ -18,6 +18,107 @@ import { DISSECTIONS } from '@/modules/jvm/internals/registry';
 import { EDGE_ROUTES, NODE_RECTS } from '@/modules/jvm/layout';
 import type { Citation, ComponentDoc } from '@/types/content';
 import { PRERENDER_PATHS } from '@/seo/pages';
+import {
+  CLASS_LOADING_INVESTIGATIONS,
+  CLASS_LOADING_QUIZ,
+  CLASS_LOADING_STATIONS,
+  DELEGATION_EXPERIMENTS,
+  LIFECYCLE_STEPS,
+  LOADER_PROFILES,
+  SOURCE_PROFILES,
+} from '@/content/labs/classLoading';
+import {
+  COLLECTORS,
+  MEMORY_AREAS,
+  MEMORY_INVESTIGATIONS,
+  MEMORY_QUIZ,
+  MEMORY_STATIONS,
+  WORKBENCH,
+} from '@/content/labs/memory';
+import { MEMORY_PROGRAMS } from '@/content/labs/memoryPrograms';
+import type { LeveledText } from '@/lib/levels';
+import type { Investigation, LabStation } from '@/types/lab';
+
+/** Rich text of the laboratories: stations, investigations and their parts. */
+function labRichText(add: (where: string, text: string | undefined) => void) {
+  const leveled = (where: string, text: LeveledText) => {
+    add(where, text.simple);
+    add(where, text.developer);
+    add(where, text.deep);
+  };
+  const station = (lab: string, s: LabStation) => {
+    const w = `${lab} station ${s.id}`;
+    add(w, s.tryIt);
+    add(w, s.accuracyNote);
+    add(w, s.term.definition);
+    leveled(w, s.explanation);
+    add(w, s.prediction?.prompt);
+    s.prediction?.options.forEach((o) => {
+      add(w, o.text);
+      add(w, o.feedback);
+    });
+    add(w, s.check.prompt);
+    s.check.options.forEach((o) => {
+      add(w, o.text);
+      add(w, o.explanation);
+    });
+  };
+  const investigation = (lab: string, i: Investigation) =>
+    leveled(`${lab} investigation ${i.id}`, i.body);
+  CLASS_LOADING_STATIONS.forEach((s) => station('class-loading', s));
+  CLASS_LOADING_INVESTIGATIONS.forEach((i) => investigation('class-loading', i));
+  for (const e of DELEGATION_EXPERIMENTS) {
+    const w = `class-loading experiment ${e.id}`;
+    add(w, e.question);
+    leveled(w, e.explanation);
+    add(w, e.prediction.prompt);
+    e.prediction.options.forEach((o) => {
+      add(w, o.text);
+      add(w, o.feedback);
+    });
+  }
+  for (const p of Object.values(LOADER_PROFILES)) leveled(`loader ${p.id}`, p.role);
+  for (const [id, p] of Object.entries(SOURCE_PROFILES)) add(`source ${id}`, p.text);
+  for (const step of LIFECYCLE_STEPS) leveled(`lifecycle step ${step.id}`, step.text);
+  for (const q of [...CLASS_LOADING_QUIZ.questions, ...MEMORY_QUIZ.questions]) {
+    add(`lab quiz ${q.id}`, q.prompt);
+    q.options.forEach((o) => {
+      add(`lab quiz ${q.id}`, o.text);
+      add(`lab quiz ${q.id}`, o.explanation);
+    });
+  }
+  MEMORY_STATIONS.forEach((s) => station('memory', s));
+  MEMORY_INVESTIGATIONS.forEach((i) => investigation('memory', i));
+  for (const area of MEMORY_AREAS) leveled(`memory area ${area.id}`, area.role);
+  for (const collector of COLLECTORS) leveled(`collector ${collector.id}`, collector.text);
+  for (const program of MEMORY_PROGRAMS) {
+    add(`memory program ${program.id}`, program.accuracyNote);
+    for (const step of program.steps) leveled(`memory step ${program.id}/${step.id}`, step.text);
+  }
+}
+
+function labCitations(): { where: string; citation: Citation }[] {
+  const out: { where: string; citation: Citation }[] = [];
+  for (const s of CLASS_LOADING_STATIONS)
+    s.references.forEach((c) => out.push({ where: `class-loading ${s.id}`, citation: c }));
+  for (const i of CLASS_LOADING_INVESTIGATIONS)
+    i.references.forEach((c) => out.push({ where: `class-loading ${i.id}`, citation: c }));
+  for (const e of DELEGATION_EXPERIMENTS)
+    e.references.forEach((c) => out.push({ where: `experiment ${e.id}`, citation: c }));
+  for (const p of Object.values(LOADER_PROFILES))
+    p.references.forEach((c) => out.push({ where: `loader ${p.id}`, citation: c }));
+  for (const s of MEMORY_STATIONS)
+    s.references.forEach((c) => out.push({ where: `memory ${s.id}`, citation: c }));
+  for (const i of MEMORY_INVESTIGATIONS)
+    i.references.forEach((c) => out.push({ where: `memory ${i.id}`, citation: c }));
+  for (const a of MEMORY_AREAS)
+    a.references.forEach((c) => out.push({ where: `area ${a.id}`, citation: c }));
+  for (const c of COLLECTORS)
+    c.references.forEach((r) => out.push({ where: `collector ${c.id}`, citation: r }));
+  for (const w of WORKBENCH)
+    w.references.forEach((r) => out.push({ where: `workbench ${w.id}`, citation: r }));
+  return out;
+}
 
 /** Every rich-text string in the content layer, labelled by where it comes from. */
 function allRichText(): { where: string; text: string }[] {
@@ -107,6 +208,7 @@ function allRichText(): { where: string; text: string }[] {
     add(`dissection ${dissection!.id}`, dissection!.accuracyNote);
     dissection!.parts.forEach((p) => add(`dissection ${dissection!.id}`, p.description));
   }
+  labRichText(add);
   return out;
 }
 
@@ -122,6 +224,7 @@ function allCitations(): { where: string; citation: Citation }[] {
     d!.references.forEach((c) => out.push({ where: d!.id, citation: c }));
   for (const chapter of FIRST_RUN.chapters)
     chapter.references.forEach((c) => out.push({ where: `lesson ${chapter.id}`, citation: c }));
+  out.push(...labCitations());
   return out;
 }
 

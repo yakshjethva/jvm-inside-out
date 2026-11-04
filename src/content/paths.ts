@@ -51,17 +51,19 @@ export const LEARNING_PATHS: LearningPath[] = [
   {
     id: 'class-loading',
     code: 'B2',
-    title: 'Class Loader Explorer',
+    title: 'Class loader explorer',
     summary:
-      'A delegation simulator and a step-by-step walkthrough of loading, linking (verification, preparation, resolution) and initialization.',
+      'The loaders of a running JVM, a delegation simulator and a step-by-step walkthrough of loading, linking (verification, preparation, resolution) and initialization, checked against JDK 25.',
     milestone: 'M3',
+    route: '/class-loading',
     topics: [
-      'Delegation simulator',
-      'Loading constraints',
-      'Initialization order and deadlocks',
-      'Class loader leaks',
+      'Bootstrap, platform, application and user-defined loaders',
+      'Parent-first, child-first and module-aware delegation',
+      'Defining and initiating loaders, loading constraints',
+      'Initialization order, locks, errors and deadlocks',
+      'Class unloading and class loader leaks',
     ],
-    labs: ['Delegation simulator', 'Lifecycle walkthrough'],
+    labs: ['Loader observatory (2D and 3D)', 'Delegation laboratory', 'Lifecycle microscope'],
   },
   {
     id: 'memory',
@@ -70,16 +72,21 @@ export const LEARNING_PATHS: LearningPath[] = [
     summary:
       'Stack versus heap, references, object layout, generations, Metaspace, native and direct memory, and the errors that come with them.',
     milestone: 'M4',
+    route: '/memory',
     topics: [
       'Heap vs stack',
       'References and objects',
       'Object headers, instance and static fields, arrays',
-      'Eden, survivor and old generations',
+      'Eden, survivor and old generations, collector by collector',
       'Metaspace, direct and native memory',
-      'Memory leaks, StackOverflowError, OutOfMemoryError',
+      'StackOverflowError and the kinds of OutOfMemoryError',
     ],
     labs: [
-      'Memory Lab: step through Person p1 = new Person("Alex") with stack and heap side by side',
+      'Memory observatory (2D and 3D)',
+      'Living stack and heap: Person p1 = new Person("Alex") and four more statements',
+      'Stack frame dissection',
+      'Object layout laboratory',
+      'Heap and native memory, with a diagnostic workbench',
     ],
   },
   {

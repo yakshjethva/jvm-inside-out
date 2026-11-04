@@ -103,6 +103,8 @@ describe('guides', () => {
       expect(topic.related, topic.slug).not.toContain(topic.slug);
       expect(COMPONENT_IDS, topic.slug).toContain(topic.explore);
       if (topic.chapter) expect(CHAPTER_IDS, topic.slug).toContain(topic.chapter);
+      if (topic.lab)
+        expect(['/class-loading', '/memory'], topic.slug).toContain(topic.lab.to.split('?')[0]);
       if (topic.scenario)
         expect(
           SCENARIOS.map((s) => s.id),
@@ -134,6 +136,8 @@ describe('titles after hydration', () => {
     '/about',
     '/contributing',
     '/anatomy',
+    '/class-loading',
+    '/memory',
     '/learn/what-is-bytecode',
   ])('%s sets the title written into its HTML', async (path) => {
     const router = createMemoryRouter(routes, { initialEntries: [path] });

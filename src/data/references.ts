@@ -144,6 +144,11 @@ export const REFERENCES = {
     'Verification of class Files',
     'Type checking with StackMapTable frames and the constraints a class file must meet.',
   ),
+  'jvms-4.7.2': jvms(
+    '4.7.2',
+    'The ConstantValue Attribute',
+    'The constant value of a static final field, assigned when the class is initialized.',
+  ),
   'jvms-5.1': jvms(
     '5.1',
     'The Run-Time Constant Pool',
@@ -227,6 +232,16 @@ export const REFERENCES = {
     description: 'Invokes instance initialization methods, private methods and superclass methods.',
   },
 
+  'jvms-6.5-getstatic': {
+    title: 'JVMS §6.5 getstatic',
+    publisher: 'Oracle · Java Virtual Machine Specification',
+    url: `${JVMS}/jvms-6.html#jvms-6.5.getstatic`,
+    version: 'Java SE 25',
+    kind: 'specification',
+    description:
+      'Reads a static field; resolves the field reference and initializes its class first.',
+  },
+
   // ── Java Language Specification (Java SE 25) ────────────────────────────
   'jls-12.1': jls(
     '12.1',
@@ -238,6 +253,11 @@ export const REFERENCES = {
     'When Initialization Occurs',
     'The exact events that trigger class or interface initialization.',
   ),
+  'jls-12.4.2': jls(
+    '12.4.2',
+    'Detailed Initialization Procedure',
+    'The initialization lock, recursive requests, textual order and the erroneous state.',
+  ),
   'jls-12.6': jls(
     '12.6',
     'Finalization of Class Instances',
@@ -247,6 +267,11 @@ export const REFERENCES = {
     '12.7',
     'Unloading of Classes and Interfaces',
     'Unloading is permitted, and only when the defining loader is reclaimable.',
+  ),
+  'jls-13.1': jls(
+    '13.1',
+    'The Form of a Binary',
+    'A reference to a constant variable is compiled to its value: no field access remains.',
   ),
 
   // ── Java SE API and tool documentation (JDK 25) ─────────────────────────
@@ -284,6 +309,48 @@ export const REFERENCES = {
     description:
       'Foreign Function & Memory API: calling native code and accessing off-heap memory.',
   },
+  'api-class-forname': {
+    title: 'Class.forName(String, boolean, ClassLoader)',
+    publisher: 'Oracle · Java SE 25 API',
+    url: `${API}/java.base/java/lang/Class.html#forName(java.lang.String,boolean,java.lang.ClassLoader)`,
+    version: 'Java SE 25',
+    kind: 'api',
+    description: 'Loads a class through a given loader, and initializes it only when asked to.',
+  },
+  'api-modulelayer': {
+    title: 'java.lang.ModuleLayer',
+    publisher: 'Oracle · Java SE 25 API',
+    url: `${API}/java.base/java/lang/ModuleLayer.html`,
+    version: 'Java SE 25',
+    kind: 'api',
+    description:
+      'The boot layer and layers created at run time; each module is mapped to a class loader.',
+  },
+  'api-bytebuffer': {
+    title: 'ByteBuffer.allocateDirect(int)',
+    publisher: 'Oracle · Java SE 25 API',
+    url: `${API}/java.base/java/nio/ByteBuffer.html#allocateDirect(int)`,
+    version: 'Java SE 25',
+    kind: 'api',
+    description:
+      'Direct buffers: memory outside the Java heap, limited by -XX:MaxDirectMemorySize.',
+  },
+  'api-instrumentation-size': {
+    title: 'Instrumentation.getObjectSize(Object)',
+    publisher: 'Oracle · Java SE 25 API',
+    url: `${API}/java.instrument/java/lang/instrument/Instrumentation.html#getObjectSize(java.lang.Object)`,
+    version: 'Java SE 25',
+    kind: 'api',
+    description: "The JVM's own estimate of the storage one object uses (not what it refers to).",
+  },
+  'api-stackwalker': {
+    title: 'java.lang.StackWalker',
+    publisher: 'Oracle · Java SE 25 API',
+    url: `${API}/java.base/java/lang/StackWalker.html`,
+    version: 'Java SE 25',
+    kind: 'api',
+    description: "Walks the frames of the current thread's stack.",
+  },
   'jni-spec': {
     title: 'Java Native Interface Specification',
     publisher: 'Oracle',
@@ -316,6 +383,31 @@ export const REFERENCES = {
     version: 'JDK 25',
     kind: 'tool',
     description: 'Disassembles class files: constant pool, descriptors and bytecode.',
+  },
+  'tool-jcmd': {
+    title: 'The jcmd command',
+    publisher: 'Oracle · JDK 25 tool reference',
+    url: `${SPECS}/man/jcmd.html`,
+    version: 'JDK 25',
+    kind: 'tool',
+    description:
+      'Diagnostic commands for a running JVM: VM.classloaders, GC.heap_info, VM.native_memory, Thread.print, GC.heap_dump.',
+  },
+  'tool-jmap': {
+    title: 'The jmap command',
+    publisher: 'Oracle · JDK 25 tool reference',
+    url: `${SPECS}/man/jmap.html`,
+    version: 'JDK 25',
+    kind: 'tool',
+    description: 'Class histograms and heap dumps of a running JVM (jcmd offers the same).',
+  },
+  'tool-jol': {
+    title: 'JOL (Java Object Layout)',
+    publisher: 'OpenJDK Code Tools',
+    url: 'https://github.com/openjdk/jol',
+    version: '0.17',
+    kind: 'tool',
+    description: 'Prints the field offsets, headers and padding of objects in the running JVM.',
   },
   'guide-gc': {
     title: 'HotSpot Virtual Machine Garbage Collection Tuning Guide',
@@ -528,6 +620,10 @@ export const REFERENCES = {
     'src/java.base/share/classes/jdk/internal/loader/ClassLoaders.java',
     'Creates the platform and application (system) class loaders.',
   ),
+  'src-classloader': src(
+    'src/java.base/share/classes/java/lang/ClassLoader.java',
+    'loadClass: findLoadedClass, the parent, then findClass; preDefineClass forbids java.* names.',
+  ),
   'src-module-loader-map': src(
     'make/conf/module-loader-map.conf',
     'Which JDK modules are defined by the boot loader and which by the platform loader.',
@@ -543,6 +639,10 @@ export const REFERENCES = {
   'src-systemdictionary': src(
     'src/hotspot/share/classfile/systemDictionary.cpp',
     "HotSpot's registry of loaded classes per class loader.",
+  ),
+  'src-javaclasses': src(
+    'src/hotspot/share/classfile/javaClasses.cpp',
+    'Creates java.lang.Class mirrors: static fields live in the mirror, ConstantValue fields are written when it is created.',
   ),
   'src-classfileparser': src(
     'src/hotspot/share/classfile/classFileParser.cpp',
@@ -583,6 +683,18 @@ export const REFERENCES = {
   'src-metaspace': src(
     'src/hotspot/share/memory/metaspace.hpp',
     'Metaspace: native memory for class metadata.',
+  ),
+  'src-compressedklass': src(
+    'src/hotspot/share/oops/compressedKlass.hpp',
+    'Compressed class pointers: 32-bit references to classes in the class space.',
+  ),
+  'src-bits': src(
+    'src/java.base/share/classes/java/nio/Bits.java',
+    'reserveMemory: counts direct buffer memory against MaxDirectMemorySize.',
+  ),
+  'src-nmt': src(
+    'src/hotspot/share/nmt/memTracker.hpp',
+    "Native Memory Tracking: HotSpot's accounting of its own native memory, by category.",
   ),
   'src-tlab': src(
     'src/hotspot/share/gc/shared/threadLocalAllocBuffer.hpp',

@@ -84,9 +84,15 @@ describe('ComponentInspector', () => {
       'What is this?',
       'Picture it',
       'What actually happens?',
+      'See it working',
       'Where does it fit?',
       'Check your understanding',
     ]);
+    // The heap is a run-time data area, so the inspector leads to the memory laboratory.
+    const working = screen.getByRole('heading', { name: 'See it working' }).closest('section')!;
+    expect(
+      within(working).getByRole('link', { name: 'Explore it in the memory laboratory' }),
+    ).toHaveAttribute('href', '/memory');
     expect(screen.getByText('Where the picture stops working')).toBeInTheDocument();
     const details = screen.getByText('Explore the technical details').closest('details')!;
     expect(details.open).toBe(false);

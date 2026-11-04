@@ -1,9 +1,12 @@
 import { Link } from 'react-router';
-import { PRIMARY_NAV, PROJECT_NAV, SITE } from '@/data/site';
+import { LABS_NAV, PRIMARY_NAV, PROJECT_NAV, SITE } from '@/data/site';
 import { LogoMark, Wordmark } from './Logo';
 
 const REFERENCE_PAGES = ['/references', '/about'];
-const LEARN_LINKS = PRIMARY_NAV.filter((item) => !REFERENCE_PAGES.includes(item.to));
+const LEARN_LINKS = [
+  ...PRIMARY_NAV.filter((item) => !REFERENCE_PAGES.includes(item.to)),
+  ...LABS_NAV,
+];
 const PROJECT_LINKS = [
   ...PRIMARY_NAV.filter((item) => REFERENCE_PAGES.includes(item.to)),
   ...PROJECT_NAV,

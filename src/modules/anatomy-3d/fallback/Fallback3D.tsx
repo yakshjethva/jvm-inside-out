@@ -1,16 +1,19 @@
 import { Box, Map as MapIcon } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
-/** What the viewer shows instead of the 3D model, with a way back to the 2D map. */
+/** What the viewer shows instead of the 3D model, with a way back to the 2D view. */
 export function Notice3D({
   title,
   children,
   onUse2D,
+  use2DLabel = 'Use the 2D map',
   action,
 }: {
   title: string;
   children: ReactNode;
   onUse2D: () => void;
+  /** The way back, named after the page's 2D view. */
+  use2DLabel?: string;
   action?: ReactNode;
 }) {
   return (
@@ -26,7 +29,7 @@ export function Notice3D({
             onClick={onUse2D}
             className="inline-flex h-9 items-center gap-2 rounded-md border border-ink-500 bg-raised px-3 text-[13.5px] text-fg hover:border-exec-400"
           >
-            <MapIcon size={15} aria-hidden /> Use the 2D map
+            <MapIcon size={15} aria-hidden /> {use2DLabel}
           </button>
         </div>
       </div>

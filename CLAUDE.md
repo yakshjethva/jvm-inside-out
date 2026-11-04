@@ -5,8 +5,8 @@
 JVM Atlas is an independent, open-source, interactive atlas of the Java Virtual Machine: its
 runtime architecture, memory management and execution. It teaches one machine at several depths:
 a beginner follows a single line of Java from source code to the CPU, and an engineer opens the
-same machine as a 66-component plate, a 3D model, HotSpot structures, verified bytecode and
-primary sources.
+same machine as a 66-component plate, a 3D model, two laboratories (class loading and memory),
+HotSpot structures, verified bytecode and primary sources.
 
 > **One machine. One source of truth. Multiple levels of understanding.**
 
@@ -117,16 +117,22 @@ src/
     anatomy-3d/     the 3D model: viewer, scene, models, components, controls, interactions, accessibility, data, fallback, tests
     lesson/         the Start here lesson: ExhibitFrame, StepControls, useStepper, Prediction, TermCard, TeachBack, exhibits/
     journey/        JourneyMachine: the line-of-Java journey
-  simulators/       journey (class-file size, bytecode), tiering, reachability, playback
+    labs/           shared by the laboratories: LabHero, StationView (the teaching cycle), Investigations
+    class-loading/  the Class Loader Explorer: observatory (LoaderStructure, ConduitLayer), DelegationLab, LifecycleMicroscope, URL state
+    memory/         the Memory Laboratory: observatory, LivingStackHeap, FrameDissection, ObjectLayoutLab, HeapNativeMemory, URL state
+    lab-3d/         the laboratories' lazy 3D models: LabViewer3D (shared shell), loader and memory models, pure layouts, tests
+  simulators/       journey (class-file size, bytecode), tiering, reachability, playback,
+                    classLoading (delegation, defining/initiating loaders, constraints), classLifecycle, memory (frames, heap, reachability)
   content/
     jvm/            components/ (66 docs), teaching.ts, regions.ts (six regions, ATLAS_AREAS), relationships, scenarios, quiz
     lesson/         firstRun.ts: the first lesson, its listings and its quiz
+    labs/           the laboratories: stations, experiments, programs, areas, layouts, collectors, quizzes, and verified evidence (*Evidence.ts)
     topics.ts       the ten guides at /learn/<slug>
     paths.ts, questions.ts, status.ts
-  glossary/         84 terms
-  data/             references.ts (123 primary sources), site.ts (brand, navigation)
+  glossary/         89 terms
+  data/             references.ts (140 primary sources), site.ts (brand, navigation, LABS_NAV)
   hooks/, lib/      learning state, storage, levels, rich text, geometry, media queries
-  types/            content.ts, lesson.ts
+  types/            content.ts, lesson.ts, lab.ts
   styles/           index.css: design tokens, the two surfaces and shared classes
   sw/               service worker (the build prepends its precache list)
 tests/unit/         Vitest
@@ -137,17 +143,19 @@ docs/               the design, brand, 3D, SEO, learning and plan documents
 
 ### Routes and URL state
 
-| Route           | Page            | URL state                                                                                     |
-| --------------- | --------------- | --------------------------------------------------------------------------------------------- |
-| `/`             | Home            |                                                                                               |
-| `/start`        | Start here      | `chapter=program\|compiler\|jvm\|loading\|memory\|execution\|gc\|recap`                       |
-| `/learn`        | Learn           | (the earlier address `/paths` still works; its canonical URL is `/learn`)                    |
-| `/learn/:slug`  | Guide           | ten slugs from `src/content/topics.ts`                                                        |
-| `/anatomy`      | Explore anatomy | `c` component, `mode`, `viewer=2d\|3d\|list`, `view=overview\|full`, `s` walkthrough, `step` |
-| `/glossary`     | Glossary        | `#term-id`                                                                                    |
-| `/references`   | References      | `#ref-<reference-id>`                                                                         |
-| `/about`        | About           | `#project-status`                                                                             |
-| `/contributing` | Contributing    |                                                                                               |
+| Route            | Page                  | URL state                                                                                                                            |
+| ---------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`              | Home                  |                                                                                                                                      |
+| `/start`         | Start here            | `chapter=program\|compiler\|jvm\|loading\|memory\|execution\|gc\|recap`                                                              |
+| `/learn`         | Learn                 | (the earlier address `/paths` still works; its canonical URL is `/learn`)                                                            |
+| `/learn/:slug`   | Guide                 | ten slugs from `src/content/topics.ts`                                                                                               |
+| `/anatomy`       | Explore anatomy       | `c` component, `mode`, `viewer=2d\|3d\|list`, `view=overview\|full`, `s` walkthrough, `step`                                         |
+| `/class-loading` | Class loader explorer | `lab=observatory\|delegation\|lifecycle`, `loader`, `run` (requests), `exp` (alone: its requests), `step`, `viewer=3d`               |
+| `/memory`        | Memory laboratory     | `lab=observatory\|living\|frames\|layout\|heap`, `area`, `viewer=3d`, `program`, `step`, `select`, `frame`, `object`, `config`, `gc` |
+| `/glossary`      | Glossary              | `#term-id`                                                                                                                           |
+| `/references`    | References            | `#ref-<reference-id>`                                                                                                                |
+| `/about`         | About                 | `#project-status`                                                                                                                    |
+| `/contributing`  | Contributing          |                                                                                                                                      |
 
 Routes are registered in two places: the router (`src/app/routes.tsx`) and `src/seo/pages.ts`
 (`PAGES`, `PRERENDER_PATHS`), which gives each public route its title and description and drives
@@ -157,9 +165,10 @@ must call `usePageTitle` with the same name (a unit test checks it). Explorer `m
 the parts, Look inside and Watch it run; `viewer` is absent for the 2D map. Existing deep links
 must keep working.
 
-Navigation is: Start here, Explore anatomy, Learn, Glossary, References, About; the logo is the
-link home, and the mobile menu adds Home, Contributing and Project status. The footer links the
-primary and project pages.
+Navigation is: Start here, Explore anatomy, Labs (a small menu: Class loader explorer, Memory
+laboratory), Learn, Glossary, References, About; the logo is the link home, and the mobile menu
+adds Home, the laboratories, Contributing and Project status. The footer links the primary pages,
+the laboratories and the project pages.
 
 ### Rendering and hydration
 
@@ -182,10 +191,12 @@ appear, move or resize after hydration: check CLS whenever a page changes.
   docs.
 - On-request features load with `React.lazy`: the inspector's interactive models, the homepage's
   map preview (when near the viewport) and the 3D viewer (only for `viewer=3d`).
-- **Three.js never reaches the first load.** `scripts/verify-build.mjs` fails the build if it is in
-  the scripts a page loads first, in the anatomy page's static imports or in the service worker's
-  precache, and enforces gzip budgets: initial scripts 125 kB, 3D chunk 275 kB. Raise a budget
-  only with a reason in the pull request.
+- **Three.js never reaches the first load.** The 3D viewers (anatomy and both laboratories) are
+  lazy and share one Three.js chunk. `scripts/verify-build.mjs` fails the build if Three.js is in
+  the scripts a page loads first, in the static imports of a page with a 3D view, anywhere
+  reachable without opening a 3D view, or in the service worker's precache, and enforces gzip
+  budgets: initial scripts 125 kB, 3D 275 kB (everything opening a 3D view downloads). A new 3D
+  viewer must be added to `VIEWERS` there. Raise a budget only with a reason in the pull request.
 - After a page has loaded, other pages are prefetched one at a time (not with Save-Data or on 2G).
 - Targets (lab, Lighthouse mobile and desktop): LCP ≤ 2.5 s, CLS ≤ 0.1, and keep TBT low as the
   lab proxy for INP ≤ 200 ms. Measure against `preview:pages` or a root build served with gzip;
@@ -200,7 +211,8 @@ prefixed `inside-java:v1:` (kept from before the rename so no learner loses prog
 - `preferences`: `level` (`simple|developer|deep`), `motion`, `mapView` (`overview|full`),
   `dismissed` (for example the explorer tour).
 - `progress`: explored and understood components, bookmarks, recent pages, quiz answers,
-  walkthroughs, lesson chapters.
+  walkthroughs, lesson chapters (laboratory stations are lessons `lab:class-loading` and
+  `lab:memory`).
 
 When a stored shape changes, extend `migratePreferences` / `migrateProgress` so old data is
 repaired field by field (the release that introduced three levels maps `beginner` to `simple` and
@@ -215,6 +227,11 @@ preferences key to hide a dismissed tour; keep it in step.
   plate, the three levels side by side, the seven areas, the guided first lesson (journey machine,
   chapters, first guides), selected walkthroughs and dissections, accuracy and sources, the
   project. It is meaningful before any script runs and never opens on Three.js.
+- **Laboratories** (`/class-loading`, `/memory`): stations at decreasing scale, each with the
+  teaching cycle in `StationView` (question → prediction → explore and observe → explanation at
+  the chosen level → term → check → technical insight), then investigations, a quiz and sources.
+  Simulators reproduce real JDK 25 output (unit-tested); state lives in the URL; progress reuses
+  `progress.lessons` with `lab:` ids (no migration). See `docs/LEARNING_EXPERIENCE.md` §10.
 - **Start here** (`/start`): seven chapters (program, compiler, JVM, loading classes, memory,
   execution, garbage collection) and a recap with a diagram, a teach-back and a five-question
   check. Teaching cycle per chapter: question → prediction → what happens (the exhibit) → why
@@ -275,7 +292,9 @@ Read `docs/3D_EXPERIENCE.md`. In short:
 - **One source of truth.** Parts, areas, relationships, walkthroughs and selection come from the
   content and the explorer's URL state; `src/modules/anatomy-3d/data/layout3d.ts` adds spatial
   metadata only, derived from the 2D plate. **Positions are a teaching layout**, never memory
-  addresses or physical locations, and the interface says so.
+  addresses or physical locations, and the interface says so. The laboratories' models
+  (`src/modules/lab-3d`) follow the same rules, draw the simulator's state and share the
+  anatomy's camera rig (with a per-model `home`), stage, materials and fallbacks.
 - The 2D map stays the default and a complete fallback; the List viewer and the prerendered page
   work without WebGL or JavaScript. Show a notice and the 2D map when WebGL is missing, the chunk
   fails or the graphics context is lost.
@@ -328,6 +347,9 @@ Add tests for new functionality; write simulator, layout and migration tests bef
   data, guide references, and that each page's runtime title equals its prerendered one.
 - Component tests (`components.test.tsx`, `learning-experience.test.tsx`), and
   `learning-state.test.ts`, `storage.test.ts`, `simulators.test.ts`.
+- Laboratories: `class-loading.test.ts`, `class-lifecycle.test.ts`, `memory.test.ts` (simulators),
+  `labs.test.ts` and `memory-content.test.ts` (content replayed against the real JDK output and
+  measured layouts), `lab-state.test.tsx` (URL state), `src/modules/lab-3d/tests/` (3D layouts).
 - `src/modules/anatomy-3d/tests/`: the 3D layout, the viewer URL state, keys and announcements.
 - `scripts/verify-build.mjs` (part of every build): prerendered pages, canonical URLs, JSON-LD,
   links, base paths, sitemap and robots rules, Three.js isolation and script budgets.
@@ -335,7 +357,9 @@ Add tests for new functionality; write simulator, layout and migration tests bef
   and forward, navigation, keyboard use, reduced motion, storage migration, offline reload, the
   whole first lesson, the explorer modes, the 3D viewer (lazy loading, selection, keyboard,
   explode, walkthroughs, no-WebGL fallback, context loss), prerendered pages without JavaScript,
-  axe-core WCAG 2.2 A/AA checks, no sideways scrolling at 360 px, console errors and internal links.
+  axe-core WCAG 2.2 A/AA checks, no sideways scrolling at 360 px, console errors and internal links,
+  and both laboratories (`labs.spec.ts`: stations, experiments, Back and Forward, the lifecycle,
+  the living heap, layouts, the Labs menu, their 3D models and fallbacks).
   Import `test` and `expect` from `tests/e2e/fixtures.ts`, which waits for hydration.
 
 Do not claim something works in a browser unless a browser test or a real browser run showed it.

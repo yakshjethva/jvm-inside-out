@@ -1,11 +1,12 @@
-import { useLayoutEffect, useState, type RefObject } from 'react';
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 export interface ArrowSpec {
   /** `data-anchor` value of the element holding the reference. */
   from: string;
   /** `data-anchor` value of the object referred to. */
   to: string;
-  tone?: 'normal' | 'muted' | 'warn';
+  /** `active`: the reference the learner selected, or one that leads to the selected object. */
+  tone?: 'normal' | 'muted' | 'warn' | 'active';
 }
 
 interface DrawnArrow extends ArrowSpec {
@@ -18,6 +19,7 @@ const TONES = {
   normal: 'var(--color-rt-300)',
   muted: 'var(--color-ink-400)',
   warn: 'var(--color-warn-400)',
+  active: 'var(--color-exec-300)',
 };
 
 /**
@@ -25,6 +27,10 @@ const TONES = {
  * where the reference is held and an arrowhead at the object, so the shape
  * carries the meaning as well as the colour. Positions are measured after
  * layout and again whenever the container resizes.
+ *
+ * On the first render the container's ref is still empty (a parent's ref is
+ * attached after its children's layout effects run), so the SVG's own parent,
+ * which is the container, is measured instead.
  */
 export function ReferenceArrows({
   container,
@@ -36,13 +42,14 @@ export function ReferenceArrows({
   /** Changes whenever the layout may have moved (for example, the current step). */
   version: string;
 }) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const [drawn, setDrawn] = useState<DrawnArrow[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
   // A string key keeps the effect stable while the arrow list keeps its meaning.
   const key = arrows.map((a) => `${a.from}>${a.to}>${a.tone ?? 'normal'}`).join('|');
 
   useLayoutEffect(() => {
-    const root = container.current;
+    const root = container.current ?? svgRef.current?.parentElement;
     if (!root) return;
     const measure = () => {
       const box = root.getBoundingClientRect();
@@ -100,13 +107,14 @@ export function ReferenceArrows({
 
   return (
     <svg
+      ref={svgRef}
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-visible"
       width={size.w}
       height={size.h}
     >
       <defs>
-        {(['normal', 'muted', 'warn'] as const).map((tone) => (
+        {(['normal', 'muted', 'warn', 'active'] as const).map((tone) => (
           <marker
             key={tone}
             id={`ref-arrow-${tone}`}
@@ -129,7 +137,7 @@ export function ReferenceArrows({
               d={arrow.d}
               fill="none"
               stroke={TONES[tone]}
-              strokeWidth={1.6}
+              strokeWidth={tone === 'active' ? 2.6 : 1.6}
               strokeDasharray={tone === 'warn' ? '5 4' : undefined}
               markerEnd={`url(#ref-arrow-${tone})`}
             />

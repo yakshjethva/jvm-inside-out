@@ -25,14 +25,16 @@ export const PROJECT_STATUS: ProjectItem[] = [
     to: '/anatomy',
   },
   {
-    name: 'Class Loader Explorer',
-    what: 'Delegation simulator and lifecycle walkthrough',
+    name: 'Class loader explorer',
+    what: 'The loaders of a JVM, a delegation simulator, and the life of a class from loading to initialization',
     milestone: 'M3',
+    to: '/class-loading',
   },
   {
-    name: 'Memory Lab',
-    what: 'Step through stack and heap, reference by reference, with your own code',
+    name: 'Memory laboratory',
+    what: 'Stack and heap step by step, frame dissection, object layouts, collectors and native memory',
     milestone: 'M4',
+    to: '/memory',
   },
   {
     name: 'Bytecode Explorer',

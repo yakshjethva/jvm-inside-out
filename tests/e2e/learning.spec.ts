@@ -91,6 +91,8 @@ test.describe('Start here', () => {
     await page.goto('start?chapter=gc');
     await page.getByRole('button', { name: 'Skip the prediction and show me' }).click();
     const exhibit = page.getByRole('figure', { name: 'Reachable, eligible, reclaimed' });
+    // The references are drawn as soon as the exhibit first appears.
+    await expect(exhibit.locator('svg path[marker-end]')).not.toHaveCount(0);
     await exhibit.getByRole('combobox').first().selectOption({ label: 'null' });
     await expect(exhibit.getByText('Eligible for collection')).toHaveCount(2);
     await exhibit.getByRole('button', { name: /Run garbage collection/ }).click();

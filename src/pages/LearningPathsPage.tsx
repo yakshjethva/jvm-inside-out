@@ -3,6 +3,7 @@ import {
   Bookmark,
   Check,
   Clock3,
+  FlaskConical,
   Map as MapIcon,
   Microscope,
   Play,
@@ -28,6 +29,7 @@ const KIND_ICON = {
   map: MapIcon,
   walkthrough: Play,
   inside: Microscope,
+  lab: FlaskConical,
 };
 
 export function LearningPathsPage() {
