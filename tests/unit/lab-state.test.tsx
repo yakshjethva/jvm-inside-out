@@ -38,6 +38,20 @@ describe('the class loader explorer’s URL state', () => {
     expect(odd.latest.current.hasExhibitState).toBe(false);
   });
 
+  it('opens the observatory on the JVM a learner built in the delegation laboratory', () => {
+    const { latest } = renderAt(
+      '/class-loading?run=app:com.example.shared.Message',
+      useClassLoadingState,
+    );
+    expect(latest.current.station).toBe('observatory');
+    expect(latest.current.results).toHaveLength(1);
+    expect(latest.current.hasExhibitState).toBe(true);
+    // Moving there from the delegation laboratory keeps the run.
+    expect(
+      stationHref('observatory', '?lab=delegation&run=app:com.example.shared.Message&step=2'),
+    ).toBe('/class-loading?run=app%3Acom.example.shared.Message');
+  });
+
   it('treats an experiment without a run as the experiment’s own requests', () => {
     const experiment = DELEGATION_EXPERIMENTS.find((e) => e.id === 'constraint')!;
     const { latest } = renderAt(

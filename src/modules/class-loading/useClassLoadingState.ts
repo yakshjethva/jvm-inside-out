@@ -44,10 +44,14 @@ export function useClassLoadingState() {
   const viewer: '2d' | '3d' = params.get('viewer') === '3d' ? '3d' : '2d';
   const rawStep = Number(params.get('step') ?? '0');
   const step = Number.isInteger(rawStep) && rawStep > 0 ? rawStep : 0;
-  /** Whether the URL holds something the learner did in this station's exhibit (a shared view). */
+  /**
+   * Whether the URL holds something the learner did in this station's exhibit
+   * (a shared view): the requests sent so far count for the observatory and the
+   * delegation laboratory, which both show the JVM they built.
+   */
   const hasExhibitState = {
-    observatory: loader !== null || viewer === '3d',
-    delegation: experiment !== null || step > 0,
+    observatory: loader !== null || viewer === '3d' || requests.length > 0,
+    delegation: experiment !== null || step > 0 || requests.length > 0,
     lifecycle: step > 0,
   }[station];
 
